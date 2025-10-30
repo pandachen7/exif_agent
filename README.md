@@ -68,6 +68,3 @@ exif_agent/
 - Number: 個體數量
 - IndependentPhoto: 有效照片標記
 
-## 授權
-
-本專案為內部使用工具
