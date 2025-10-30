@@ -12,7 +12,8 @@
       "Bash(findstr:*)",
       "Bash(dir /B /A-D \"D:\\ws\\exif_agent\")",
       "Bash(python extract_doc.py:*)",
-      "Bash(venv/Scripts/python:*)"
+      "Bash(venv/Scripts/python:*)",
+      "Bash(venv\\Scripts\\python:*)"
     ],
     "deny": [],
     "ask": []

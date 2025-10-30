@@ -106,7 +106,10 @@ def getUniqueLogger(filepath="logger", **whatever):
     _logger.propagate = False  # 不要傳遞到logger root
 
     if show_console:
-        consoleh = logging.StreamHandler(sys.stdout)
+        # 強制使用 UTF-8 編碼來支援中文
+        import io
+        utf8_stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+        consoleh = logging.StreamHandler(utf8_stdout)
 
         format_log = "%(asctime)s %(filename)s:%(lineno)d.%(funcName)-8s %(levelname)-.1s %(message)s"
 
@@ -123,7 +126,7 @@ def getUniqueLogger(filepath="logger", **whatever):
         )
 
         logfile_path = os.path.join(log_folder, "log")
-        fileh = TimedRotatingFileHandler(logfile_path, when="midnight", backupCount=365)
+        fileh = TimedRotatingFileHandler(logfile_path, when="midnight", backupCount=365, encoding='utf-8')
         fileh.suffix = "%Y-%m-%d.log"
         # 10秒一次, 保留5筆的話: ('./logs/log.out', when='S', interval=10, backupCount=5)
         fileh.setFormatter(logging.Formatter(format_log))
