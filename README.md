@@ -196,9 +196,9 @@ OI (Occurrence Index) = 有效照片數 / 相機工作時數 × 1000
 - **有效照片**：同一物種在設定時間間隔內只計算一次
 - **相機工作時數**：從第一張照片到最後一張照片的時間差（小時）
 
-## 🔧 進階設定
+## 🔧 設定檔案
 
-### 修改 config.txt
+### config.txt 配置說明
 
 ```ini
 [Path]
@@ -215,6 +215,17 @@ AccessDBName = wildlife_data.accdb
 ExcelFileName = wildlife_data.xlsx
 CSVFileName = wildlife_data.csv
 ```
+
+### OCR 引擎選擇
+
+**PaddleOCR**（推薦）：
+- ✅ 準確率高、支援多語言
+- ✅ 無需額外安裝，自動下載模型
+- ⚠️ 首次執行需要下載模型（約 10-20MB）
+
+**Tesseract**：
+- ✅ 傳統 OCR 引擎，穩定可靠
+- ⚠️ 需要另外安裝 Tesseract OCR 軟體
 
 ## 🛠️ 故障排除
 
@@ -282,8 +293,7 @@ exif_agent/
 ├── config.txt              # 設定檔
 ├── requirements.txt        # Python 套件清單
 ├── README.md               # 專案說明文件
-├── USAGE.md                # 詳細使用手冊
-├── PROJECT_SUMMARY.md      # 專案技術總結
+├── CHANGELOG.md            # 更新記錄
 │
 ├── src/                    # 原始碼目錄
 │   ├── processor.py        # 核心處理邏輯
@@ -320,6 +330,133 @@ exif_agent/
 | `csv_excel_writer.py` | CSV/Excel 輸出 | `CSVExcelWriter.write_to_excel()` |
 | `main_window.py` | PyQt6 介面 | `MainWindow`, `ProcessThread` |
 
+### 核心功能詳解
+
+#### 1. EXIF 資訊提取 (`src/exif/exif_reader.py`)
+- 讀取照片與影片的 EXIF 元數據
+- 提取日期時間、相機 ID、標籤資訊
+- 解析 Adobe Bridge 的 HierarchicalSubject 標籤
+- **多物種標籤支援**：自動偵測同張照片中的多個物種
+- 自動識別 Site、Plot_ID、Camera_ID
+- 提取物種分類（Group、Species）與數量
+
+#### 2. 日期時間偵測優先順序 (`src/ocr/ocr_detector.py`)
+1. **CSV 參考檔案**：從同名 CSV 讀取準確時間（最優先）
+2. **EXIF CreateDate**：從照片 EXIF 資訊中提取
+3. **OCR 辨識**：使用 PaddleOCR 辨識照片上的日期
+4. **前一筆記錄**：使用連續檔案的時間
+5. **預設值**：2000/1/1（最後手段）
+
+支援的日期格式：
+- `2020/06/22 09:40:05`
+- `2020-06-22 09:40:05`
+- `2020.06.22 09:40:05`
+- `2020/6/22 09:40` (無秒數自動補 00)
+
+#### 3. 有效照片計算邏輯 (`src/processor.py`)
+- 按照 (Camera_ID, Species) 分組
+- 根據設定的時間間隔（預設 30 分鐘）計算有效照片
+- 同一物種在時間間隔內只計算一次
+- IndependentPhoto 欄位標記：1 為有效，0 為無效
+- 自動計算每台相機的工作期間（period_start, period_end）
+
+#### 4. 資料儲存機制
+**Access DB** (`src/database/access_db.py`):
+- 自動建立 file_record 資料表
+- 批次插入資料
+- 支援清空資料表功能
+- 完整的欄位類型定義
+
+**CSV/Excel** (`src/database/csv_excel_writer.py`):
+- 同時輸出 CSV 和 Excel 格式
+- 便於資料檢視與對照
+- 支援讀取 CSV 作為時間參考
+
+### 技術特點
+
+#### 1. 模組化設計
+- 各功能模組獨立，易於維護與擴充
+- 清晰的依賴關係
+- 便於單元測試
+- 職責清晰分離
+
+#### 2. 錯誤處理
+- 完整的異常捕捉
+- 詳細的錯誤日誌
+- 友善的錯誤提示
+- 警告機制（多物種、缺少 Camera_ID 等）
+
+#### 3. 日誌系統
+- 自動產生日誌檔案到 `logs/` 資料夾
+- 格式：`logs/exif_agent_YYYYMMDD_HHMMSS.log`
+- 記錄所有重要操作
+- 支援不同等級的日誌（INFO、WARNING、ERROR、CRITICAL）
+- UTF-8 編碼支援中文
+
+#### 4. 彈性配置
+- 支援 config.txt 設定檔
+- 可透過 GUI 或手動修改
+- 設定即時儲存
+- 命令列參數覆蓋設定檔
+
+### 相依套件
+
+主要套件：
+- **PyQt6** (>=6.6.0): GUI 框架
+- **PaddleOCR** (>=2.7.0): OCR 文字辨識
+- **paddlepaddle** (>=2.5.0): PaddleOCR 後端
+- **Pillow** (>=10.0.0): 影像處理
+- **exifread** (>=3.0.0): EXIF 資訊讀取
+- **pandas** (>=2.1.0): 資料處理
+- **openpyxl** (>=3.1.0): Excel 檔案操作
+- **pyodbc** (>=5.0.0): Access DB 連接
+- **python-dotenv**: 環境變數管理
+
+### 使用情境範例
+
+#### 情境 1: 大量照片批次處理
+```bash
+python cli.py -i D:\Photos\2024_Wildlife -o D:\Output
+```
+
+#### 情境 2: 設定較長的時間間隔
+```bash
+python cli.py -i D:\Photos -o D:\Output --time-interval 60
+```
+
+#### 情境 3: 只產生 CSV/Excel（跳過 Access DB）
+```bash
+python cli.py -i D:\Photos -o D:\Output --skip-access
+```
+
+#### 情境 4: 已有 CSV 時間參考
+1. 將 CSV 檔案放在照片資料夾中
+2. 命名為與資料夾同名（如 `100RECNX.csv`）
+3. 執行處理，系統會優先使用 CSV 時間
+
+### 已知限制與注意事項
+
+#### 1. Access DB 支援
+- ⚠️ Windows Only
+- ⚠️ 需要安裝 Microsoft Access Database Engine
+- ⚠️ 32/64 位元需與 Python 版本匹配
+
+#### 2. OCR 辨識
+- ⏱️ PaddleOCR 首次執行需下載模型（約 10-20 MB）
+- 📷 辨識準確度受照片品質影響
+- 💡 建議準備 CSV 參考檔案以確保時間準確
+
+#### 3. 效能考量
+- 🐌 大量照片處理較耗時
+- 🔍 OCR 處理速度較慢
+- 💻 建議使用命令列模式進行大批次處理
+
+#### 4. 標籤格式要求
+- 📋 必須使用 Adobe Bridge 的 HierarchicalSubject 格式
+- 🔤 Camera_ID 前綴必須為英文字母（如 JC38，不可 12JC）
+- ⚠️ 缺少 Species 標籤的照片會被跳過
+- ✅ 支援多物種標籤，自動產生多筆記錄
+
 ## 🔄 更新記錄
 
 ### v2.0.0 (2025-10-30)
@@ -331,18 +468,42 @@ exif_agent/
 - 🔧 改進錯誤處理和日誌系統
 - 📚 新增完整中文文件
 
-## 📧 聯絡與支援
+## 📚 技術支援
 
-如遇到問題或需要技術支援，請：
-1. 查看 [USAGE.md](USAGE.md) 詳細使用手冊
-2. 查看日誌檔案 `logs/exif_agent_YYYYMMDD_HHMMSS.log`
-3. 參考原始文件 `doc/exif2accessDB(EXIF轉換資料表).docx`
+### 日誌檔案位置
+所有日誌自動儲存到：
+```
+logs/exif_agent_YYYYMMDD_HHMMSS.log
+```
+
+### 錯誤代碼說明
+- **INFO**: 一般資訊訊息
+- **WARN**: 警告訊息，程式繼續執行（如多物種標籤、缺少 Camera_ID）
+- **ERROR**: 錯誤訊息，該檔案處理失敗但程式繼續
+- **CRITICAL**: 嚴重錯誤，程式可能中斷
+
+### 除錯步驟
+1. 查看最新的日誌檔案：`logs/exif_agent_YYYYMMDD_HHMMSS.log`
+2. 檢查 config.txt 設定是否正確
+3. 確認照片的 EXIF 資訊和標籤格式
+4. 驗證 Access Database Engine 是否正確安裝
+5. 參考原始文件：`doc/exif2accessDB(EXIF轉換資料表).docx`
+
+### 改進建議與回饋
+如有功能建議或遇到問題，請：
+- 📋 記錄詳細的錯誤訊息和操作步驟
+- 📁 保留相關的日誌檔案
+- 🖼️ 提供問題照片的範例（如涉及 EXIF 或 OCR 問題）
 
 ## 📄 授權
 
 本專案為野生動物研究專用工具，僅供內部使用。
 
 ---
+
+**維護者**: EXIF Agent 開發者 Panda
+**最後更新**: 2025-10-30
+**版本**: v2.0.0
 
 **特別感謝**：本專案基於原始 tkinter 版本重建，感謝所有研究人員的回饋與建議。
 

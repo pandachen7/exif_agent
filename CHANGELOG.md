@@ -188,5 +188,5 @@ CSVFileName = wildlife_data.csv
 
 ---
 
-**維護者**：EXIF Agent 開發團隊
+**維護者**：EXIF Agent 開發者 Panda
 **最後更新**：2025-10-30
