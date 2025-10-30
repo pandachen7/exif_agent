@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c:*)",
+      "Bash(python -m venv:*)",
+      "Bash(venvScriptspip install python-docx)",
+      "Bash(\"venv/Scripts/pip\" install python-docx)",
+      "Bash(\"venv/Scripts/python\":*)",
+      "Bash(\"venv/Scripts/python\" -u read_doc.py)",
+      "Bash(\"venv/Scripts/pip\" install -r requirements.txt)",
+      "Bash(dir /b /s *.py)",
+      "Bash(findstr:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
