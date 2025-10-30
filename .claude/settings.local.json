@@ -9,7 +9,10 @@
       "Bash(\"venv/Scripts/python\" -u read_doc.py)",
       "Bash(\"venv/Scripts/pip\" install -r requirements.txt)",
       "Bash(dir /b /s *.py)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(dir /B /A-D \"D:\\ws\\exif_agent\")",
+      "Bash(python extract_doc.py:*)",
+      "Bash(venv/Scripts/python:*)"
     ],
     "deny": [],
     "ask": []

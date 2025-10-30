@@ -5,23 +5,22 @@ EXIF 資訊讀取模組
 import os
 import re
 from datetime import datetime
-from typing import Dict, Optional, List
-from PIL import Image
-from PIL.ExifTags import TAGS
+from typing import Dict, List, Optional
+
 import exifread
-from src.utils.logger import get_logger
 
+from src.utils.logger import getUniqueLogger
 
-logger = get_logger()
+logger = getUniqueLogger()
 
 
 class ExifReader:
     """EXIF 資訊讀取器"""
 
     # 支援的圖片格式
-    IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.tif', '.tiff', '.bmp'}
+    IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp"}
     # 支援的影片格式
-    VIDEO_EXTENSIONS = {'.avi', '.mov', '.mp4', '.mpg', '.mpeg'}
+    VIDEO_EXTENSIONS = {".avi", ".mov", ".mp4", ".mpg", ".mpeg"}
 
     def __init__(self):
         self.logger = logger
@@ -46,30 +45,30 @@ class ExifReader:
             return {}
 
         exif_data = {
-            'SourceFile': os.path.basename(file_path),
-            'FilePath': file_path,
-            'DateTimeOriginal': None,
-            'CreateDate': None,
-            'Subject': None,
-            'HierarchicalSubject': None,
-            'Camera_ID': None,
-            'Site': None,
-            'Plot_ID': None,
-            'Group': None,
-            'Species': None,
-            'Number': 1
+            "SourceFile": os.path.basename(file_path),
+            "FilePath": file_path,
+            "DateTimeOriginal": None,
+            "CreateDate": None,
+            "Subject": None,
+            "HierarchicalSubject": None,
+            "Camera_ID": None,
+            "Site": None,
+            "Plot_ID": None,
+            "Group": None,
+            "Species": None,
+            "Number": 1,
         }
 
         try:
             # 使用 exifread 讀取更完整的 EXIF 資訊
-            with open(file_path, 'rb') as f:
+            with open(file_path, "rb") as f:
                 tags = exifread.process_file(f, details=False)
 
             # 提取日期時間
             datetime_original = self._extract_datetime(tags)
             if datetime_original:
-                exif_data['DateTimeOriginal'] = datetime_original
-                exif_data['CreateDate'] = datetime_original
+                exif_data["DateTimeOriginal"] = datetime_original
+                exif_data["CreateDate"] = datetime_original
 
             # 提取 XMP 標籤資訊
             self._extract_xmp_tags(tags, exif_data)
@@ -83,10 +82,10 @@ class ExifReader:
         """提取日期時間資訊"""
         # 嘗試多個可能的日期時間標籤
         datetime_tags = [
-            'EXIF DateTimeOriginal',
-            'EXIF DateTimeDigitized',
-            'Image DateTime',
-            'EXIF DateTime'
+            "EXIF DateTimeOriginal",
+            "EXIF DateTimeDigitized",
+            "Image DateTime",
+            "EXIF DateTime",
         ]
 
         for tag_name in datetime_tags:
@@ -95,7 +94,7 @@ class ExifReader:
                     dt_str = str(tags[tag_name])
                     # 將 EXIF 格式轉換為標準格式
                     # 格式: 2020:03:15 15:38:10
-                    dt = datetime.strptime(dt_str, '%Y:%m:%d %H:%M:%S')
+                    dt = datetime.strptime(dt_str, "%Y:%m:%d %H:%M:%S")
                     return dt
                 except ValueError:
                     continue
@@ -117,14 +116,14 @@ class ExifReader:
 
         for tag_key in tags.keys():
             tag_str = str(tag_key).lower()
-            if 'subject' in tag_str:
-                if 'hierarchical' in tag_str:
+            if "subject" in tag_str:
+                if "hierarchical" in tag_str:
                     hierarchical_subject = str(tags[tag_key])
                 else:
                     subject = str(tags[tag_key])
 
-        exif_data['Subject'] = subject
-        exif_data['HierarchicalSubject'] = hierarchical_subject
+        exif_data["Subject"] = subject
+        exif_data["HierarchicalSubject"] = hierarchical_subject
 
         # 解析 HierarchicalSubject
         if hierarchical_subject:
@@ -135,46 +134,83 @@ class ExifReader:
         解析 HierarchicalSubject 字串
 
         格式範例: "1_Site ID|JC38, 2_Animal|Human|Researcher, 3_Number|1"
+        注意：可能有多個 2_Animal 標籤，需要產生多筆記錄
         """
         try:
             # 分割各個項目
-            items = [item.strip() for item in hierarchical_subject.split(',')]
+            items = [item.strip() for item in hierarchical_subject.split(",")]
+
+            # 用來儲存多個動物標籤
+            animal_tags = []
+            numbers = []  # 可能有多個 3_Number 標籤對應不同動物
 
             for item in items:
-                if '1_Site ID|' in item or '1_SiteID|' in item:
+                if "1_Site ID|" in item or "1_SiteID|" in item:
                     # 提取 Camera ID
-                    parts = item.split('|')
+                    parts = item.split("|")
                     if len(parts) >= 2:
                         camera_id = parts[1].strip()
-                        exif_data['Camera_ID'] = camera_id
+                        exif_data["Camera_ID"] = camera_id
                         # 分割 Site 和 Plot_ID
                         # 例如 JC38 -> Site=JC, Plot_ID=38
-                        match = re.match(r'([A-Za-z]+)(\d+)', camera_id)
+                        match = re.match(r"([A-Za-z]+)(\d+)", camera_id)
                         if match:
-                            exif_data['Site'] = match.group(1)
-                            exif_data['Plot_ID'] = match.group(2)
+                            exif_data["Site"] = match.group(1)
+                            exif_data["Plot_ID"] = match.group(2)
 
-                elif '2_Animal|' in item:
-                    # 提取 Group 和 Species
-                    parts = item.split('|')
+                elif "2_Animal|" in item:
+                    # 收集所有動物標籤
+                    parts = item.split("|")
+                    animal_info = {}
                     if len(parts) >= 3:
-                        exif_data['Group'] = parts[1].strip()
-                        exif_data['Species'] = parts[2].strip()
+                        animal_info["Group"] = parts[1].strip()
+                        animal_info["Species"] = parts[2].strip()
                     elif len(parts) == 2:
-                        exif_data['Species'] = parts[1].strip()
+                        animal_info["Group"] = ""
+                        animal_info["Species"] = parts[1].strip()
 
-                elif '3_Number|' in item:
+                    # 只添加有效的動物標籤
+                    if (
+                        animal_info.get("Species")
+                        and animal_info["Species"].lower() != "unknown"
+                    ):
+                        animal_tags.append(animal_info)
+
+                elif "3_Number|" in item:
                     # 提取 Number
-                    parts = item.split('|')
+                    parts = item.split("|")
                     if len(parts) >= 2:
                         number_str = parts[1].strip()
                         # 處理 >N 的情況
-                        if number_str.startswith('>'):
+                        if number_str.startswith(">"):
                             number_str = number_str[1:]
                         try:
-                            exif_data['Number'] = int(number_str)
+                            numbers.append(int(number_str))
                         except ValueError:
-                            exif_data['Number'] = 1
+                            numbers.append(1)
+
+            # 處理動物標籤
+            if len(animal_tags) > 1:
+                # 有多個動物標籤，標記為需要產生多筆記錄
+                exif_data["multiple_animals"] = animal_tags
+                exif_data["has_multiple_animals"] = True
+                # 如果有多個 Number，分配給對應的動物
+                for i, animal in enumerate(animal_tags):
+                    if i < len(numbers):
+                        animal["Number"] = numbers[i]
+                    else:
+                        animal["Number"] = 1
+                self.logger.info(
+                    f"Found {len(animal_tags)} animal tags in HierarchicalSubject"
+                )
+            elif len(animal_tags) == 1:
+                # 只有一個動物標籤，正常處理
+                exif_data["Group"] = animal_tags[0].get("Group", "")
+                exif_data["Species"] = animal_tags[0].get("Species", "")
+                exif_data["Number"] = numbers[0] if numbers else 1
+            else:
+                # 沒有有效的動物標籤
+                exif_data["Number"] = numbers[0] if numbers else 1
 
         except Exception as e:
             self.logger.warning(f"Error parsing HierarchicalSubject: {str(e)}")

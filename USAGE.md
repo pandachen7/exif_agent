@@ -184,7 +184,7 @@ CSVFileName = exif_data.csv
 ## 技術支援
 
 如有問題請查看日誌檔案：
-- `exif_agent_YYYYMMDD_HHMMSS.log`
+- `logs/exif_agent_YYYYMMDD_HHMMSS.log`
 
 常見錯誤代碼：
 - `WARN`: 警告訊息，程式繼續執行

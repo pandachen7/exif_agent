@@ -34,6 +34,7 @@ ENV/
 
 # Logs
 *.log
+logs/
 
 # Output
 output/
@@ -48,3 +49,6 @@ Thumbs.db
 # Temp files
 read_doc.py
 doc_content.txt
+
+# private
+.env

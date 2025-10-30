@@ -3,37 +3,45 @@
 EXIF Agent 命令列介面
 用於批次處理，不需要 GUI
 """
-import sys
-import os
 import argparse
+import os
+import sys
 
 # 將 src 目錄加入路徑
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from src.processor import PhotoProcessor
 from src.database.access_db import AccessDB
 from src.database.csv_excel_writer import CSVExcelWriter
+from src.processor import PhotoProcessor
 from src.utils.config import Config
-from src.utils.logger import get_logger
+from src.utils.logger import getUniqueLogger
 
 
 def main():
     """命令列主程式"""
-    parser = argparse.ArgumentParser(description='EXIF Agent - 照片資訊管理系統 (命令列版)')
+    parser = argparse.ArgumentParser(
+        description="EXIF Agent - 照片資訊管理系統 (命令列版)"
+    )
 
-    parser.add_argument('-i', '--input', required=True, help='輸入資料夾路徑')
-    parser.add_argument('-o', '--output', required=True, help='輸出資料夾路徑')
-    parser.add_argument('-t', '--time-interval', type=int, default=30,
-                       help='時間間隔(分鐘)，預設 30')
-    parser.add_argument('--ocr', choices=['paddle', 'tesseract'], default='paddle',
-                       help='OCR 引擎選擇，預設 paddle')
-    parser.add_argument('--skip-access', action='store_true',
-                       help='跳過 Access DB 儲存')
+    parser.add_argument("-i", "--input", required=True, help="輸入資料夾路徑")
+    parser.add_argument("-o", "--output", required=True, help="輸出資料夾路徑")
+    parser.add_argument(
+        "-t", "--time-interval", type=int, default=30, help="時間間隔(分鐘)，預設 30"
+    )
+    parser.add_argument(
+        "--ocr",
+        choices=["paddle", "tesseract"],
+        default="paddle",
+        help="OCR 引擎選擇，預設 paddle",
+    )
+    parser.add_argument(
+        "--skip-access", action="store_true", help="跳過 Access DB 儲存"
+    )
 
     args = parser.parse_args()
 
     # 初始化 logger
-    logger = get_logger()
+    logger = getUniqueLogger()
     logger.info("=" * 50)
     logger.info("EXIF Agent CLI 啟動")
     logger.info("=" * 50)
@@ -52,10 +60,7 @@ def main():
     logger.info(f"時間間隔: {args.time_interval} 分鐘")
     logger.info(f"OCR 引擎: {args.ocr}")
 
-    processor = PhotoProcessor(
-        time_interval=args.time_interval,
-        ocr_engine=args.ocr
-    )
+    processor = PhotoProcessor(time_interval=args.time_interval, ocr_engine=args.ocr)
 
     # 處理照片
     logger.info("開始處理照片...")

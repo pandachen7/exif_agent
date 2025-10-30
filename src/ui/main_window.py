@@ -2,25 +2,39 @@
 """
 PyQt6 主視窗介面
 """
+from PyQt6.QtCore import QThread, pyqtSignal
 from PyQt6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QLabel, QLineEdit, QTextEdit, QComboBox,
-    QFileDialog, QMessageBox, QProgressBar, QSpinBox, QGroupBox
+    QComboBox,
+    QFileDialog,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QSpinBox,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
 )
-from PyQt6.QtCore import QThread, pyqtSignal, Qt
+
 from src.utils.config import Config
-from src.utils.logger import get_logger
+from src.utils.logger import getUniqueLogger
 
-
-logger = get_logger()
+logger = getUniqueLogger()
 
 
 class ProcessThread(QThread):
     """處理執行緒"""
+
     progress = pyqtSignal(str)  # 進度訊息
     finished = pyqtSignal(bool, str)  # 完成訊號 (成功, 訊息)
 
-    def __init__(self, processor, input_path, output_path, access_db_path, excel_path, csv_path):
+    def __init__(
+        self, processor, input_path, output_path, access_db_path, excel_path, csv_path
+    ):
         super().__init__()
         self.processor = processor
         self.input_path = input_path
@@ -45,6 +59,7 @@ class ProcessThread(QThread):
 
             # 儲存到 CSV
             from src.database.csv_excel_writer import CSVExcelWriter
+
             writer = CSVExcelWriter()
 
             self.progress.emit("儲存到 CSV...")
@@ -57,6 +72,7 @@ class ProcessThread(QThread):
             # 儲存到 Access DB
             try:
                 from src.database.access_db import AccessDB
+
                 self.progress.emit("儲存到 Access DB...")
 
                 with AccessDB(self.access_db_path) as db:
@@ -192,9 +208,7 @@ class MainWindow(QMainWindow):
     def browse_input_path(self):
         """選擇輸入資料夾"""
         path = QFileDialog.getExistingDirectory(
-            self,
-            "選擇輸入資料夾",
-            self.input_path_edit.text()
+            self, "選擇輸入資料夾", self.input_path_edit.text()
         )
         if path:
             self.input_path_edit.setText(path)
@@ -202,9 +216,7 @@ class MainWindow(QMainWindow):
     def browse_output_path(self):
         """選擇輸出資料夾"""
         path = QFileDialog.getExistingDirectory(
-            self,
-            "選擇輸出資料夾",
-            self.output_path_edit.text()
+            self, "選擇輸出資料夾", self.output_path_edit.text()
         )
         if path:
             self.output_path_edit.setText(path)
@@ -236,6 +248,7 @@ class MainWindow(QMainWindow):
 
         # 準備處理
         import os
+
         os.makedirs(output_path, exist_ok=True)
 
         # 建立輸出檔案路徑
@@ -245,9 +258,10 @@ class MainWindow(QMainWindow):
 
         # 建立處理器
         from src.processor import PhotoProcessor
+
         processor = PhotoProcessor(
             time_interval=self.time_interval_spin.value(),
-            ocr_engine=self.ocr_combo.currentText()
+            ocr_engine=self.ocr_combo.currentText(),
         )
 
         # 清空訊息
@@ -255,8 +269,7 @@ class MainWindow(QMainWindow):
 
         # 建立並啟動執行緒
         self.process_thread = ProcessThread(
-            processor, input_path, output_path,
-            access_db_path, excel_path, csv_path
+            processor, input_path, output_path, access_db_path, excel_path, csv_path
         )
         self.process_thread.progress.connect(self.update_progress)
         self.process_thread.finished.connect(self.processing_finished)
@@ -298,17 +311,19 @@ class MainWindow(QMainWindow):
             "確認",
             "確定要清空所有資料表嗎？此操作無法復原！",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
+            QMessageBox.StandardButton.No,
         )
 
         if reply == QMessageBox.StandardButton.Yes:
             try:
                 import os
+
                 output_path = self.output_path_edit.text()
                 access_db_path = os.path.join(output_path, self.config.access_db_name)
 
                 if os.path.exists(access_db_path):
                     from src.database.access_db import AccessDB
+
                     with AccessDB(access_db_path) as db:
                         db.clear_table("file_record")
 
@@ -328,7 +343,7 @@ class MainWindow(QMainWindow):
                 "確認",
                 "處理尚未完成，確定要關閉嗎？",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No
+                QMessageBox.StandardButton.No,
             )
 
             if reply == QMessageBox.StandardButton.No:

@@ -4,12 +4,13 @@ Access DB 資料庫操作模組
 """
 import os
 from datetime import datetime
-from typing import List, Dict
+from typing import Dict, List
+
 import pyodbc
-from src.utils.logger import get_logger
 
+from src.utils.logger import getUniqueLogger
 
-logger = get_logger()
+logger = getUniqueLogger()
 
 
 class AccessDB:
@@ -36,8 +37,8 @@ class AccessDB:
 
             # 建立連接字串
             conn_str = (
-                r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};'
-                f'DBQ={self.db_path};'
+                r"Driver={Microsoft Access Driver (*.mdb, *.accdb)};"
+                f"DBQ={self.db_path};"
             )
 
             self.connection = pyodbc.connect(conn_str)
@@ -56,8 +57,9 @@ class AccessDB:
         try:
             # 使用 ADOX 建立新資料庫
             import win32com.client
-            adox = win32com.client.Dispatch('ADOX.Catalog')
-            adox.Create(f'Provider=Microsoft.ACE.OLEDB.12.0;Data Source={self.db_path}')
+
+            adox = win32com.client.Dispatch("ADOX.Catalog")
+            adox.Create(f"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={self.db_path}")
             self.logger.info(f"Created new Access DB: {self.db_path}")
         except Exception as e:
             self.logger.error(f"Failed to create Access DB: {str(e)}")
@@ -122,21 +124,21 @@ class AccessDB:
 
             # 準備資料
             values = (
-                record.get('SourceFile'),
-                record.get('DateTimeOriginal'),
-                record.get('Date'),
-                record.get('Time'),
-                record.get('Site'),
-                record.get('Plot_ID'),
-                record.get('Camera_ID'),
-                record.get('Group'),
-                record.get('Species'),
-                record.get('Number', 1),
-                record.get('Note', ''),
-                record.get('IndependentPhoto', 0),
+                record.get("SourceFile"),
+                record.get("DateTimeOriginal"),
+                record.get("Date"),
+                record.get("Time"),
+                record.get("Site"),
+                record.get("Plot_ID"),
+                record.get("Camera_ID"),
+                record.get("Group"),
+                record.get("Species"),
+                record.get("Number", 1),
+                record.get("Note", ""),
+                record.get("IndependentPhoto", 0),
                 datetime.now(),  # CreateDate
-                record.get('period_start'),
-                record.get('period_end')
+                record.get("period_start"),
+                record.get("period_end"),
             )
 
             self.cursor.execute(sql, values)

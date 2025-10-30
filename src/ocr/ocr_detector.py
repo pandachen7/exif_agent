@@ -5,18 +5,17 @@ OCR 日期偵測模組
 """
 import re
 from datetime import datetime
-from typing import Optional, Tuple
-from PIL import Image
-from src.utils.logger import get_logger
+from typing import Optional
 
+from src.utils.logger import getUniqueLogger
 
-logger = get_logger()
+logger = getUniqueLogger()
 
 
 class OCRDetector:
     """OCR 日期偵測器"""
 
-    def __init__(self, engine: str = 'paddle'):
+    def __init__(self, engine: str = "paddle"):
         """
         初始化 OCR 偵測器
 
@@ -27,21 +26,24 @@ class OCRDetector:
         self.logger = logger
         self.ocr = None
 
-        if self.engine == 'paddle':
+        if self.engine == "paddle":
             self._init_paddle()
-        elif self.engine == 'tesseract':
+        elif self.engine == "tesseract":
             self._init_tesseract()
         else:
             self.logger.warning(f"Unknown OCR engine: {engine}, using paddle")
-            self.engine = 'paddle'
+            self.engine = "paddle"
             self._init_paddle()
 
     def _init_paddle(self):
         """初始化 PaddleOCR"""
         try:
             from paddleocr import PaddleOCR
+
             # 使用英文模型，因為日期主要是數字和英文
-            self.ocr = PaddleOCR(use_angle_cls=True, lang='en', use_gpu=False, show_log=False)
+            self.ocr = PaddleOCR(
+                use_angle_cls=True, lang="en", use_gpu=False, show_log=False
+            )
             self.logger.info("PaddleOCR initialized successfully")
         except Exception as e:
             self.logger.error(f"Failed to initialize PaddleOCR: {str(e)}")
@@ -51,6 +53,7 @@ class OCRDetector:
         """初始化 Tesseract OCR"""
         try:
             import pytesseract
+
             self.ocr = pytesseract
             self.logger.info("Tesseract OCR initialized successfully")
         except Exception as e:
@@ -72,9 +75,9 @@ class OCRDetector:
             return None
 
         try:
-            if self.engine == 'paddle':
+            if self.engine == "paddle":
                 return self._detect_with_paddle(image_path)
-            elif self.engine == 'tesseract':
+            elif self.engine == "tesseract":
                 return self._detect_with_tesseract(image_path)
         except Exception as e:
             self.logger.error(f"OCR detection failed for {image_path}: {str(e)}")
@@ -98,7 +101,7 @@ class OCRDetector:
                     text_lines.append(text)
 
             # 合併文字並嘗試解析日期
-            full_text = ' '.join(text_lines)
+            full_text = " ".join(text_lines)
             self.logger.debug(f"OCR detected text: {full_text}")
 
             # 嘗試從文字中提取日期時間
@@ -107,7 +110,9 @@ class OCRDetector:
             if detected_dt:
                 self.logger.info(f"OCR detected datetime: {detected_dt}")
             else:
-                self.logger.warning(f"Could not parse datetime from OCR text: {full_text}")
+                self.logger.warning(
+                    f"Could not parse datetime from OCR text: {full_text}"
+                )
 
             return detected_dt
 
@@ -153,11 +158,11 @@ class OCRDetector:
         # 常見的日期時間格式
         patterns = [
             # 完整格式: 年/月/日 時:分:秒
-            r'(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})',
+            r"(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})",
             # 沒有秒: 年/月/日 時:分
-            r'(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})\s+(\d{1,2}):(\d{1,2})',
+            r"(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})\s+(\d{1,2}):(\d{1,2})",
             # 只有日期: 年/月/日
-            r'(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})',
+            r"(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})",
         ]
 
         for pattern in patterns:
@@ -189,8 +194,8 @@ class OCRDetector:
         """切換 OCR 引擎"""
         if engine != self.engine:
             self.engine = engine.lower()
-            if self.engine == 'paddle':
+            if self.engine == "paddle":
                 self._init_paddle()
-            elif self.engine == 'tesseract':
+            elif self.engine == "tesseract":
                 self._init_tesseract()
             self.logger.info(f"Switched OCR engine to: {self.engine}")

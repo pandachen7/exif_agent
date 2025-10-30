@@ -3,12 +3,13 @@
 CSV 和 Excel 資料寫入模組
 """
 import os
-from typing import List, Dict
+from typing import Dict, List
+
 import pandas as pd
-from src.utils.logger import get_logger
 
+from src.utils.logger import getUniqueLogger
 
-logger = get_logger()
+logger = getUniqueLogger()
 
 
 class CSVExcelWriter:
@@ -37,7 +38,7 @@ class CSVExcelWriter:
             os.makedirs(os.path.dirname(csv_path), exist_ok=True)
 
             # 寫入 CSV
-            df.to_csv(csv_path, index=False, encoding='utf-8-sig')
+            df.to_csv(csv_path, index=False, encoding="utf-8-sig")
             self.logger.info(f"Written {len(records)} records to CSV: {csv_path}")
 
         except Exception as e:
@@ -64,8 +65,8 @@ class CSVExcelWriter:
             os.makedirs(os.path.dirname(excel_path), exist_ok=True)
 
             # 寫入 Excel
-            with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
-                df.to_excel(writer, sheet_name='file_record', index=False)
+            with pd.ExcelWriter(excel_path, engine="openpyxl") as writer:
+                df.to_excel(writer, sheet_name="file_record", index=False)
 
             self.logger.info(f"Written {len(records)} records to Excel: {excel_path}")
 
@@ -89,13 +90,13 @@ class CSVExcelWriter:
 
             # 如果檔案存在，讀取並合併
             if os.path.exists(csv_path):
-                df_existing = pd.read_csv(csv_path, encoding='utf-8-sig')
+                df_existing = pd.read_csv(csv_path, encoding="utf-8-sig")
                 df = pd.concat([df_existing, df_new], ignore_index=True)
             else:
                 df = df_new
 
             # 寫入
-            df.to_csv(csv_path, index=False, encoding='utf-8-sig')
+            df.to_csv(csv_path, index=False, encoding="utf-8-sig")
             self.logger.info(f"Appended {len(records)} records to CSV: {csv_path}")
 
         except Exception as e:
@@ -116,7 +117,7 @@ class CSVExcelWriter:
             if not os.path.exists(csv_path):
                 return {}
 
-            df = pd.read_csv(csv_path, encoding='utf-8-sig')
+            df = pd.read_csv(csv_path, encoding="utf-8-sig")
 
             # 尋找 Filename 和 CreateDate 欄位
             filename_col = None
@@ -124,9 +125,13 @@ class CSVExcelWriter:
 
             for col in df.columns:
                 col_lower = col.lower()
-                if 'filename' in col_lower or '檔名' in col_lower:
+                if "filename" in col_lower or "檔名" in col_lower:
                     filename_col = col
-                if 'createdate' in col_lower or 'datetime' in col_lower or '時間' in col_lower:
+                if (
+                    "createdate" in col_lower
+                    or "datetime" in col_lower
+                    or "時間" in col_lower
+                ):
                     datetime_col = col
 
             if not filename_col or not datetime_col:
@@ -138,10 +143,12 @@ class CSVExcelWriter:
             for _, row in df.iterrows():
                 filename = str(row[filename_col])
                 datetime_str = str(row[datetime_col])
-                if filename and datetime_str and datetime_str != 'nan':
+                if filename and datetime_str and datetime_str != "nan":
                     result[filename] = datetime_str
 
-            self.logger.info(f"Read {len(result)} datetime entries from CSV: {csv_path}")
+            self.logger.info(
+                f"Read {len(result)} datetime entries from CSV: {csv_path}"
+            )
             return result
 
         except Exception as e:

@@ -3,21 +3,22 @@
 EXIF Agent 主程式
 照片 EXIF 資訊管理系統
 """
-import sys
 import os
+import sys
 
 # 將 src 目錄加入路徑
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from PyQt6.QtWidgets import QApplication
+
 from src.ui.main_window import MainWindow
-from src.utils.logger import get_logger
+from src.utils.logger import getUniqueLogger
 
 
 def main():
     """主程式入口"""
     # 初始化 logger
-    logger = get_logger()
+    logger = getUniqueLogger()
     logger.info("=" * 50)
     logger.info("EXIF Agent 啟動")
     logger.info("=" * 50)
