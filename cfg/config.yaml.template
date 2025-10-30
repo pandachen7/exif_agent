@@ -1,0 +1,34 @@
+# EXIF Agent Configuration File
+# 設定檔 - 請依照實際需求修改
+# 使用前請將此檔案複製為 config.yaml
+
+# 路徑設定
+path:
+  # 多媒體資料夾路徑
+  input: ""
+  # 輸出路徑
+  output: "./output"
+
+# 處理設定
+processing:
+  # 時間間隔 (分鐘) - 用於計算有效照片數
+  # 預設: 30 分鐘
+  default_time_interval: 30
+
+  # OCR 引擎選擇
+  # 可選: paddle, tesseract
+  ocr_engine: "paddle"
+
+  # 是否啟用偵錯模式
+  debug_mode: false
+
+# 資料庫設定
+database:
+  # Access DB 檔案名稱
+  access_db_name: "exif_data.accdb"
+
+  # Excel 檔案名稱
+  excel_file_name: "exif_data.xlsx"
+
+  # CSV 檔案名稱
+  csv_file_name: "exif_data.csv"

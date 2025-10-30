@@ -50,5 +50,8 @@ Thumbs.db
 read_doc.py
 doc_content.txt
 
+# Config (keep template only)
+cfg/config.yaml
+
 # private
 .env

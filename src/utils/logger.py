@@ -74,10 +74,10 @@ class ColorFormatter(logging.Formatter):
 
 # 如果用systemctl, console的訊息會直接紀錄到你設定的log路徑中, 因此通常可以不用改動
 # 但如果希望用TimedRotatingFileHandler來命名不同的log檔名, 那還是以save_log為主
-def getUniqueLogger(filepath="logger", **whatever):
+def getUniqueLogger(filepath=__name__, **whatever):
     """
     Args:
-        filepath: logger name
+        filepath: logger name, 設定`__name__`會自動產生階層式的 logger name
         **whatever: 對應舊的params, 不用理會的kwargs
 
     其他設定可以直接寫到.env, e.g.
@@ -108,7 +108,10 @@ def getUniqueLogger(filepath="logger", **whatever):
     if show_console:
         # 強制使用 UTF-8 編碼來支援中文
         import io
-        utf8_stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+
+        utf8_stdout = io.TextIOWrapper(
+            sys.stdout.buffer, encoding="utf-8", errors="replace"
+        )
         consoleh = logging.StreamHandler(utf8_stdout)
 
         format_log = "%(asctime)s %(filename)s:%(lineno)d.%(funcName)-8s %(levelname)-.1s %(message)s"
@@ -126,7 +129,9 @@ def getUniqueLogger(filepath="logger", **whatever):
         )
 
         logfile_path = os.path.join(log_folder, "log")
-        fileh = TimedRotatingFileHandler(logfile_path, when="midnight", backupCount=365, encoding='utf-8')
+        fileh = TimedRotatingFileHandler(
+            logfile_path, when="midnight", backupCount=365, encoding="utf-8"
+        )
         fileh.suffix = "%Y-%m-%d.log"
         # 10秒一次, 保留5筆的話: ('./logs/log.out', when='S', interval=10, backupCount=5)
         fileh.setFormatter(logging.Formatter(format_log))

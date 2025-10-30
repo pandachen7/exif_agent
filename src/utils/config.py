@@ -3,113 +3,109 @@
 配置檔案讀取模組
 """
 import os
-import configparser
-from typing import Dict, Any
+from typing import Any
+
+from ruamel.yaml import YAML
 
 
 class Config:
     """配置管理類別"""
 
-    def __init__(self, config_file: str = "config.txt"):
+    def __init__(self, config_file: str = "cfg/config.yaml"):
         self.config_file = config_file
-        self.config = configparser.ConfigParser()
+        self.config = {}
+        self.yaml = YAML()
+        self.yaml.preserve_quotes = True
+        self.yaml.default_flow_style = False
         self.load_config()
 
     def load_config(self):
         """讀取配置檔案"""
         if os.path.exists(self.config_file):
-            self.config.read(self.config_file, encoding='utf-8')
+            with open(self.config_file, "r", encoding="utf-8") as f:
+                self.config = self.yaml.load(f) or {}
         else:
             self.create_default_config()
 
     def create_default_config(self):
         """建立預設配置檔案"""
-        self.config['Path'] = {
-            'PathInput': '',
-            'PathOutput': './output'
+        self.config = {
+            "path": {"input": "", "output": "./output"},
+            "processing": {
+                "default_time_interval": 30,
+                "ocr_engine": "paddle",
+                "debug_mode": False,
+            },
+            "database": {
+                "access_db_name": "exif_data.accdb",
+                "excel_file_name": "exif_data.xlsx",
+                "csv_file_name": "exif_data.csv",
+            },
         }
-
-        self.config['Processing'] = {
-            'DefaultTimeInterval': '30',
-            'OCREngine': 'paddle',
-            'DebugMode': 'False'
-        }
-
-        self.config['Database'] = {
-            'AccessDBName': 'exif_data.accdb',
-            'ExcelFileName': 'exif_data.xlsx',
-            'CSVFileName': 'exif_data.csv'
-        }
-
         self.save_config()
 
     def save_config(self):
         """儲存配置到檔案"""
-        with open(self.config_file, 'w', encoding='utf-8') as f:
-            self.config.write(f)
+        # 確保 cfg 資料夾存在
+        os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
 
-    def get(self, section: str, key: str, fallback: Any = None) -> str:
+        with open(self.config_file, "w", encoding="utf-8") as f:
+            self.yaml.dump(self.config, f)
+
+    def get(self, section: str, key: str, fallback: Any = None) -> Any:
         """取得配置值"""
-        return self.config.get(section, key, fallback=fallback)
+        return self.config.get(section, {}).get(key, fallback)
 
-    def get_int(self, section: str, key: str, fallback: int = 0) -> int:
-        """取得整數配置值"""
-        return self.config.getint(section, key, fallback=fallback)
-
-    def get_bool(self, section: str, key: str, fallback: bool = False) -> bool:
-        """取得布林配置值"""
-        return self.config.getboolean(section, key, fallback=fallback)
-
-    def set(self, section: str, key: str, value: str):
+    def set(self, section: str, key: str, value: Any):
         """設定配置值"""
         if section not in self.config:
             self.config[section] = {}
-        self.config[section][key] = str(value)
+        self.config[section][key] = value
 
     @property
     def path_input(self) -> str:
-        return self.get('Path', 'PathInput', '')
+        return self.get("path", "input", "")
 
     @path_input.setter
     def path_input(self, value: str):
-        self.set('Path', 'PathInput', value)
+        self.set("path", "input", value)
 
     @property
     def path_output(self) -> str:
-        return self.get('Path', 'PathOutput', './output')
+        return self.get("path", "output", "./output")
 
     @path_output.setter
     def path_output(self, value: str):
-        self.set('Path', 'PathOutput', value)
+        self.set("path", "output", value)
 
     @property
     def time_interval(self) -> int:
-        return self.get_int('Processing', 'DefaultTimeInterval', 30)
+        return int(self.get("processing", "default_time_interval", 30))
 
     @time_interval.setter
     def time_interval(self, value: int):
-        self.set('Processing', 'DefaultTimeInterval', str(value))
+        self.set("processing", "default_time_interval", int(value))
 
     @property
     def ocr_engine(self) -> str:
-        return self.get('Processing', 'OCREngine', 'paddle')
+        return self.get("processing", "ocr_engine", "paddle")
 
     @ocr_engine.setter
     def ocr_engine(self, value: str):
-        self.set('Processing', 'OCREngine', value)
+        self.set("processing", "ocr_engine", value)
 
     @property
     def debug_mode(self) -> bool:
-        return self.get_bool('Processing', 'DebugMode', False)
+        return bool(self.get("processing", "debug_mode", False))
 
     @property
     def access_db_name(self) -> str:
-        return self.get('Database', 'AccessDBName', 'exif_data.accdb')
+        return self.get("database", "access_db_name", "exif_data.accdb")
 
     @property
     def excel_file_name(self) -> str:
-        return self.get('Database', 'ExcelFileName', 'exif_data.xlsx')
+        return self.get("database", "excel_file_name", "exif_data.xlsx")
 
     @property
     def csv_file_name(self) -> str:
-        return self.get('Database', 'CSVFileName', 'exif_data.csv')
+        return self.get("database", "csv_file_name", "exif_data.csv")

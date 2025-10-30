@@ -198,22 +198,32 @@ OI (Occurrence Index) = 有效照片數 / 相機工作時數 × 1000
 
 ## 🔧 設定檔案
 
-### config.txt 配置說明
+### config.yaml 配置說明
 
-```ini
-[Path]
-PathInput = D:\CameraTrap\2024   # 預設輸入路徑
-PathOutput = D:\Results\2024      # 預設輸出路徑
+配置檔案位於 `cfg/config.yaml`（首次執行時會自動建立）
 
-[Processing]
-DefaultTimeInterval = 30          # 時間間隔（分鐘）
-OCREngine = paddle               # OCR 引擎（paddle/tesseract）
-DebugMode = False                # 除錯模式
+```yaml
+# 路徑設定
+path:
+  input: "D:\\CameraTrap\\2024"   # 預設輸入路徑
+  output: "D:\\Results\\2024"      # 預設輸出路徑
 
-[Database]
-AccessDBName = wildlife_data.accdb
-ExcelFileName = wildlife_data.xlsx
-CSVFileName = wildlife_data.csv
+# 處理設定
+processing:
+  default_time_interval: 30        # 時間間隔（分鐘）
+  ocr_engine: "paddle"            # OCR 引擎（paddle/tesseract）
+  debug_mode: false               # 除錯模式
+
+# 資料庫設定
+database:
+  access_db_name: "wildlife_data.accdb"
+  excel_file_name: "wildlife_data.xlsx"
+  csv_file_name: "wildlife_data.csv"
+```
+
+也可以從範本檔案開始：
+```bash
+cp cfg/config.yaml.template cfg/config.yaml
 ```
 
 ### OCR 引擎選擇
@@ -290,10 +300,13 @@ pip install PyQt6
 exif_agent/
 ├── main.py                 # GUI 主程式入口
 ├── cli.py                  # 命令列介面
-├── config.txt              # 設定檔
 ├── requirements.txt        # Python 套件清單
 ├── README.md               # 專案說明文件
 ├── CHANGELOG.md            # 更新記錄
+│
+├── cfg/                    # 配置檔案資料夾
+│   ├── config.yaml         # 主配置檔（自動建立）
+│   └── config.yaml.template # 配置範本檔
 │
 ├── src/                    # 原始碼目錄
 │   ├── processor.py        # 核心處理邏輯
