@@ -65,7 +65,52 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 pip install -r requirements.txt
 ```
 
-> ⚠️ **注意**：首次執行時 PaddleOCR 會自動下載模型檔案（約 10-20MB）
+5. **安裝 Tesseract OCR（可選）**
+
+如果需要使用 Tesseract OCR 引擎，請依照以下方式安裝：
+
+**Windows 環境：**
+1. 下載 Tesseract 安裝程式：
+   - 前往 [Tesseract GitHub Releases](https://github.com/UB-Mannheim/tesseract/wiki)
+   - 下載最新版本的 Windows 安裝檔（如 `tesseract-ocr-w64-setup-5.3.3.20231005.exe`）
+
+2. 執行安裝程式：
+   - 建議安裝到預設路徑：`C:\Program Files\Tesseract-OCR`
+   - 記得勾選「Additional language data」以支援多語言（如需要）
+
+3. 設定環境變數：
+   - 將 Tesseract 的安裝路徑加入系統 PATH
+   - 或在程式中指定 tesseract 路徑：
+     ```python
+     # 在 src/ocr/ocr_detector.py 中設定
+     pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+     ```
+
+4. 驗證安裝：
+   ```bash
+   tesseract --version
+   ```
+
+**Ubuntu/Debian 環境：**
+```bash
+# 更新套件列表
+sudo apt update
+
+# 安裝 Tesseract OCR
+sudo apt install tesseract-ocr
+
+# 安裝額外語言包（可選）
+sudo apt install tesseract-ocr-chi-tra  # 繁體中文
+sudo apt install tesseract-ocr-chi-sim  # 簡體中文
+sudo apt install tesseract-ocr-eng      # 英文（通常已包含）
+
+# 驗證安裝
+tesseract --version
+```
+
+> ⚠️ **注意**：
+> - PaddleOCR 是預設 OCR 引擎，無需額外安裝，首次執行時會自動下載模型檔案（約 10-20MB）
+> - Tesseract 僅在選擇使用時需要安裝
 
 ## 💻 使用方式
 
