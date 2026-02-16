@@ -30,9 +30,9 @@ def main():
     )
     parser.add_argument(
         "--ocr",
-        choices=["paddle", "tesseract"],
-        default="paddle",
-        help="OCR 引擎選擇，預設 paddle",
+        choices=["easyocr", "tesseract"],
+        default="easyocr",
+        help="OCR 引擎選擇，預設 easyocr",
     )
     parser.add_argument(
         "--skip-access", action="store_true", help="跳過 Access DB 儲存"

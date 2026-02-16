@@ -17,13 +17,13 @@ logger = getUniqueLogger()
 class PhotoProcessor:
     """照片處理器"""
 
-    def __init__(self, time_interval: int = 30, ocr_engine: str = "paddle"):
+    def __init__(self, time_interval: int = 30, ocr_engine: str = "easyocr"):
         """
         初始化處理器
 
         Args:
             time_interval: 時間間隔(分鐘)，用於計算有效照片數
-            ocr_engine: OCR 引擎
+            ocr_engine: OCR 引擎，可選 'easyocr' 或 'tesseract'
         """
         self.time_interval = time_interval
         self.exif_reader = ExifReader()

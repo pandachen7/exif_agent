@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 OCR 日期偵測模組
-支援 PaddleOCR 和 Tesseract
+預設使用 EasyOCR，備用 Tesseract
 """
 import re
 from datetime import datetime
@@ -15,39 +15,51 @@ logger = getUniqueLogger()
 class OCRDetector:
     """OCR 日期偵測器"""
 
-    def __init__(self, engine: str = "paddle"):
+    def __init__(self, engine: str = "easyocr"):
         """
         初始化 OCR 偵測器
 
         Args:
-            engine: OCR 引擎，可選 'paddle' 或 'tesseract'
+            engine: OCR 引擎，可選 'easyocr' 或 'tesseract'
         """
         self.engine = engine.lower()
         self.logger = logger
         self.ocr = None
 
-        if self.engine == "paddle":
-            self._init_paddle()
+        if self.engine == "easyocr":
+            self._init_easyocr()
         elif self.engine == "tesseract":
             self._init_tesseract()
         else:
-            self.logger.warning(f"Unknown OCR engine: {engine}, using paddle")
-            self.engine = "paddle"
-            self._init_paddle()
+            self.logger.warning(f"Unknown OCR engine: {engine}, using easyocr")
+            self.engine = "easyocr"
+            self._init_easyocr()
 
-    def _init_paddle(self):
-        """初始化 PaddleOCR"""
+    def _init_easyocr(self):
+        """初始化 EasyOCR"""
         try:
-            from paddleocr import PaddleOCR
+            import easyocr
 
-            # 使用英文模型，因為日期主要是數字和英文
-            self.ocr = PaddleOCR(
-                use_angle_cls=True, lang="en", use_gpu=False, show_log=False
-            )
-            self.logger.info("PaddleOCR initialized successfully")
+            self.ocr = easyocr.Reader(["en"], gpu=self._check_gpu())
+            self.logger.info("EasyOCR initialized successfully")
         except Exception as e:
-            self.logger.error(f"Failed to initialize PaddleOCR: {str(e)}")
+            self.logger.error(f"Failed to initialize EasyOCR: {str(e)}")
             self.ocr = None
+
+    def _check_gpu(self) -> bool:
+        """檢查是否有可用的 NVIDIA GPU"""
+        try:
+            import torch
+
+            available = torch.cuda.is_available()
+            if available:
+                self.logger.info(f"CUDA GPU detected: {torch.cuda.get_device_name(0)}")
+            else:
+                self.logger.info("No CUDA GPU detected, using CPU")
+            return available
+        except ImportError:
+            self.logger.info("torch not installed, using CPU")
+            return False
 
     def _init_tesseract(self):
         """初始化 Tesseract OCR"""
@@ -75,8 +87,8 @@ class OCRDetector:
             return None
 
         try:
-            if self.engine == "paddle":
-                return self._detect_with_paddle(image_path)
+            if self.engine == "easyocr":
+                return self._detect_with_easyocr(image_path)
             elif self.engine == "tesseract":
                 return self._detect_with_tesseract(image_path)
         except Exception as e:
@@ -85,26 +97,21 @@ class OCRDetector:
 
         return None
 
-    def _detect_with_paddle(self, image_path: str) -> Optional[datetime]:
-        """使用 PaddleOCR 偵測日期時間"""
+    def _detect_with_easyocr(self, image_path: str) -> Optional[datetime]:
+        """使用 EasyOCR 偵測日期時間"""
         try:
-            result = self.ocr.ocr(image_path, cls=True)
+            result = self.ocr.readtext(image_path)
 
-            if not result or len(result) == 0:
+            if not result:
                 return None
 
             # 收集所有識別到的文字
-            text_lines = []
-            for line in result[0]:
-                if line and len(line) > 1:
-                    text = line[1][0]  # line[1][0] 是識別的文字
-                    text_lines.append(text)
+            text_lines = [item[1] for item in result]
 
             # 合併文字並嘗試解析日期
             full_text = " ".join(text_lines)
             self.logger.debug(f"OCR detected text: {full_text}")
 
-            # 嘗試從文字中提取日期時間
             detected_dt = self._parse_datetime_from_text(full_text)
 
             if detected_dt:
@@ -117,7 +124,7 @@ class OCRDetector:
             return detected_dt
 
         except Exception as e:
-            self.logger.error(f"PaddleOCR detection error: {str(e)}")
+            self.logger.error(f"EasyOCR detection error: {str(e)}")
             return None
 
     def _detect_with_tesseract(self, image_path: str) -> Optional[datetime]:
@@ -194,8 +201,8 @@ class OCRDetector:
         """切換 OCR 引擎"""
         if engine != self.engine:
             self.engine = engine.lower()
-            if self.engine == "paddle":
-                self._init_paddle()
+            if self.engine == "easyocr":
+                self._init_easyocr()
             elif self.engine == "tesseract":
                 self._init_tesseract()
             self.logger.info(f"Switched OCR engine to: {self.engine}")

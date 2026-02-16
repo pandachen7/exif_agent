@@ -1,5 +1,25 @@
 # 更新日誌 (Changelog)
 
+## [v2.1.0] - 2026-02-16
+
+### 變更
+
+#### OCR 引擎更換
+- **移除 PaddleOCR**：不再依賴 paddleocr / paddlepaddle
+- **EasyOCR 設為預設**：安裝簡單，支援 CPU 與 NVIDIA GPU
+- **Tesseract 降為備用**：pytesseract 從 requirements.txt 移除，需手動安裝
+
+#### GPU 支援
+- 自動偵測 NVIDIA CUDA GPU，有 GPU 時 EasyOCR 自動啟用加速
+- 純 CPU 環境也可正常運行，無需額外設定
+- README 新增 GPU 版 PyTorch 安裝說明（需先於 requirements.txt 安裝）
+
+#### 設定檔
+- `cfg/config.yaml.template` 預設 `ocr_engine` 改為 `"easyocr"`
+- GUI / CLI 的 OCR 選項改為 `easyocr` / `tesseract`
+
+---
+
 ## [v2.0.0] - 2025-10-30
 
 ### 🎉 重大更新
@@ -26,11 +46,10 @@
 結果: 產生 2 筆記錄
 ```
 
-#### 2. PaddleOCR 整合
-- 使用更先進的 PaddleOCR 取代 Tesseract
+#### 2. OCR 整合
 - 支援動態切換 OCR 引擎
-- 更高的日期辨識準確率
 - 自動下載和管理模型
+- *(v2.1.0 已改用 EasyOCR 取代 PaddleOCR)*
 
 #### 3. 多格式資料輸出
 - **Access Database** (.accdb) - 關聯式資料庫
@@ -120,7 +139,7 @@ PathOutput = D:\Results\2024
 
 [Processing]
 DefaultTimeInterval = 30
-OCREngine = paddle
+OCREngine = easyocr
 DebugMode = False
 
 [Database]
@@ -135,7 +154,7 @@ CSVFileName = wildlife_data.csv
 |---------|----------------|--------------|------|
 | EXIF 資訊提取 | ✅ | ✅ | 保持 |
 | 多物種標籤處理 | ❌ | ✅ | 新增 |
-| OCR 日期辨識 | ✅ (Tesseract) | ✅ (PaddleOCR) | 升級 |
+| OCR 日期辨識 | ✅ (Tesseract) | ✅ (EasyOCR) | 升級 |
 | 時間優先順序 | ✅ | ✅ | 保持 |
 | Access DB 儲存 | ✅ | ✅ | 保持 |
 | CSV 輸出 | ❌ | ✅ | 新增 |
@@ -200,4 +219,4 @@ CSVFileName = wildlife_data.csv
 ---
 
 **維護者**：EXIF Agent 開發者 Panda
-**最後更新**：2025-10-30
+**最後更新**：2026-02-16

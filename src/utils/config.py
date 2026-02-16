@@ -33,7 +33,7 @@ class Config:
             "path": {"input": "", "output": "./output"},
             "processing": {
                 "default_time_interval": 30,
-                "ocr_engine": "paddle",
+                "ocr_engine": "easyocr",
                 "debug_mode": False,
             },
             "database": {
@@ -88,7 +88,7 @@ class Config:
 
     @property
     def ocr_engine(self) -> str:
-        return self.get("processing", "ocr_engine", "paddle")
+        return self.get("processing", "ocr_engine", "easyocr")
 
     @ocr_engine.setter
     def ocr_engine(self, value: str):

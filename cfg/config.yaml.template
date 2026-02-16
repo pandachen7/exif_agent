@@ -15,9 +15,8 @@ processing:
   # 預設: 30 分鐘
   default_time_interval: 30
 
-  # OCR 引擎選擇
-  # 可選: paddle, tesseract
-  ocr_engine: "paddle"
+  # OCR 引擎 (easyocr / tesseract)
+  ocr_engine: "easyocr"
 
   # 是否啟用偵錯模式
   debug_mode: false

@@ -20,9 +20,5 @@
 
     // data cache
     "redis.redis-for-vscode",
-
-    // 自動化編程
-    // "saoudrizwan.claude-dev",
-    // "RooVeterinaryInc.roo-cline",    
   ]
 }

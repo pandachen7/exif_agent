@@ -163,7 +163,7 @@ class MainWindow(QMainWindow):
         # OCR 引擎選擇
         settings_layout.addWidget(QLabel("OCR 引擎:"))
         self.ocr_combo = QComboBox()
-        self.ocr_combo.addItems(["paddle", "tesseract"])
+        self.ocr_combo.addItems(["easyocr", "tesseract"])
         self.ocr_combo.setCurrentText(self.config.ocr_engine)
         self.ocr_combo.setToolTip("選擇 OCR 辨識引擎")
         settings_layout.addWidget(self.ocr_combo)
