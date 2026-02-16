@@ -37,7 +37,10 @@ class Config:
                 "debug_mode": False,
             },
             "database": {
+                "save_access_db": True,
+                "save_sqlite": True,
                 "access_db_name": "exif_data.accdb",
+                "sqlite_db_name": "exif_data.sqlite",
                 "excel_file_name": "exif_data.xlsx",
                 "csv_file_name": "exif_data.csv",
             },
@@ -99,8 +102,28 @@ class Config:
         return bool(self.get("processing", "debug_mode", False))
 
     @property
+    def save_access_db(self) -> bool:
+        return bool(self.get("database", "save_access_db", True))
+
+    @save_access_db.setter
+    def save_access_db(self, value: bool):
+        self.set("database", "save_access_db", bool(value))
+
+    @property
+    def save_sqlite(self) -> bool:
+        return bool(self.get("database", "save_sqlite", True))
+
+    @save_sqlite.setter
+    def save_sqlite(self, value: bool):
+        self.set("database", "save_sqlite", bool(value))
+
+    @property
     def access_db_name(self) -> str:
         return self.get("database", "access_db_name", "exif_data.accdb")
+
+    @property
+    def sqlite_db_name(self) -> str:
+        return self.get("database", "sqlite_db_name", "exif_data.sqlite")
 
     @property
     def excel_file_name(self) -> str:

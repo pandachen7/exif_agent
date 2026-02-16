@@ -33,15 +33,19 @@ class ProcessThread(QThread):
     finished = pyqtSignal(bool, str)  # 完成訊號 (成功, 訊息)
 
     def __init__(
-        self, processor, input_path, output_path, access_db_path, excel_path, csv_path
+        self, processor, input_path, output_path, access_db_path, sqlite_db_path,
+        excel_path, csv_path, save_access_db=True, save_sqlite=True
     ):
         super().__init__()
         self.processor = processor
         self.input_path = input_path
         self.output_path = output_path
         self.access_db_path = access_db_path
+        self.sqlite_db_path = sqlite_db_path
         self.excel_path = excel_path
         self.csv_path = csv_path
+        self.save_access_db = save_access_db
+        self.save_sqlite = save_sqlite
 
     def run(self):
         """執行處理"""
@@ -70,18 +74,37 @@ class ProcessThread(QThread):
             writer.write_to_excel(records, self.excel_path)
 
             # 儲存到 Access DB
-            try:
-                from src.database.access_db import AccessDB
+            if self.save_access_db:
+                try:
+                    from src.database.access_db import AccessDB
 
-                self.progress.emit("儲存到 Access DB...")
+                    self.progress.emit("儲存到 Access DB...")
 
-                with AccessDB(self.access_db_path) as db:
-                    db.insert_records_batch(records)
+                    with AccessDB(self.access_db_path) as db:
+                        db.insert_records_batch(records)
 
-                self.progress.emit("Access DB 儲存完成")
-            except Exception as e:
-                self.progress.emit(f"Access DB 儲存失敗: {str(e)}")
-                self.progress.emit("請確認已安裝 Microsoft Access Database Engine")
+                    self.progress.emit("Access DB 儲存完成")
+                except Exception as e:
+                    self.progress.emit(f"Access DB 儲存失敗: {str(e)}")
+                    self.progress.emit("請確認已安裝 Microsoft Access Database Engine")
+            else:
+                self.progress.emit("Access DB 儲存已停用")
+
+            # 儲存到 SQLite
+            if self.save_sqlite:
+                try:
+                    from src.database.sqlite_db import SQLiteDB
+
+                    self.progress.emit("儲存到 SQLite...")
+
+                    with SQLiteDB(self.sqlite_db_path) as db:
+                        db.insert_records_batch(records)
+
+                    self.progress.emit("SQLite 儲存完成")
+                except Exception as e:
+                    self.progress.emit(f"SQLite 儲存失敗: {str(e)}")
+            else:
+                self.progress.emit("SQLite 儲存已停用")
 
             # 顯示警告訊息
             warnings = self.processor.get_warnings()
@@ -252,7 +275,10 @@ class MainWindow(QMainWindow):
         os.makedirs(output_path, exist_ok=True)
 
         # 建立輸出檔案路徑
-        access_db_path = os.path.join(output_path, self.config.access_db_name)
+        # Access DB 和 SQLite 存放在專案 db/ 目錄
+        db_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "db")
+        access_db_path = os.path.join(db_dir, self.config.access_db_name)
+        sqlite_db_path = os.path.join(db_dir, self.config.sqlite_db_name)
         excel_path = os.path.join(output_path, self.config.excel_file_name)
         csv_path = os.path.join(output_path, self.config.csv_file_name)
 
@@ -269,7 +295,10 @@ class MainWindow(QMainWindow):
 
         # 建立並啟動執行緒
         self.process_thread = ProcessThread(
-            processor, input_path, output_path, access_db_path, excel_path, csv_path
+            processor, input_path, output_path, access_db_path, sqlite_db_path,
+            excel_path, csv_path,
+            save_access_db=self.config.save_access_db,
+            save_sqlite=self.config.save_sqlite,
         )
         self.process_thread.progress.connect(self.update_progress)
         self.process_thread.finished.connect(self.processing_finished)
@@ -318,16 +347,35 @@ class MainWindow(QMainWindow):
             try:
                 import os
 
-                output_path = self.output_path_edit.text()
-                access_db_path = os.path.join(output_path, self.config.access_db_name)
+                db_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "db")
+                cleared = []
 
+                # 清空 Access DB
+                access_db_path = os.path.join(db_dir, self.config.access_db_name)
                 if os.path.exists(access_db_path):
-                    from src.database.access_db import AccessDB
+                    try:
+                        from src.database.access_db import AccessDB
 
-                    with AccessDB(access_db_path) as db:
-                        db.clear_table("file_record")
+                        with AccessDB(access_db_path) as db:
+                            db.clear_table("file_record")
+                        cleared.append("Access DB")
+                    except Exception as e:
+                        logger.warning(f"清空 Access DB 失敗: {str(e)}")
 
-                    QMessageBox.information(self, "成功", "資料表已清空")
+                # 清空 SQLite
+                sqlite_db_path = os.path.join(db_dir, self.config.sqlite_db_name)
+                if os.path.exists(sqlite_db_path):
+                    try:
+                        from src.database.sqlite_db import SQLiteDB
+
+                        with SQLiteDB(sqlite_db_path) as db:
+                            db.clear_table("file_record")
+                        cleared.append("SQLite")
+                    except Exception as e:
+                        logger.warning(f"清空 SQLite 失敗: {str(e)}")
+
+                if cleared:
+                    QMessageBox.information(self, "成功", f"已清空: {', '.join(cleared)}")
                     self.statusBar().showMessage("資料表已清空", 3000)
                 else:
                     QMessageBox.warning(self, "警告", "找不到資料庫檔案")

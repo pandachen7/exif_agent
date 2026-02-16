@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from src.database.access_db import AccessDB
 from src.database.csv_excel_writer import CSVExcelWriter
+from src.database.sqlite_db import SQLiteDB
 from src.processor import PhotoProcessor
 from src.utils.config import Config
 from src.utils.logger import getUniqueLogger
@@ -86,9 +87,10 @@ def main():
     logger.info(f"儲存到 Excel: {excel_path}")
     writer.write_to_excel(records, excel_path)
 
-    # Access DB
-    if not args.skip_access:
-        access_db_path = os.path.join(args.output, config.access_db_name)
+    # Access DB (直接寫入 db/ 目錄)
+    db_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "db")
+    if config.save_access_db and not args.skip_access:
+        access_db_path = os.path.join(db_dir, config.access_db_name)
         logger.info(f"儲存到 Access DB: {access_db_path}")
 
         try:
@@ -98,6 +100,22 @@ def main():
         except Exception as e:
             logger.error(f"Access DB 儲存失敗: {str(e)}")
             logger.warning("請確認已安裝 Microsoft Access Database Engine")
+    elif not config.save_access_db:
+        logger.info("Access DB 儲存已停用 (config: save_access_db = false)")
+
+    # SQLite (儲存到 db/ 目錄)
+    if config.save_sqlite:
+        sqlite_db_path = os.path.join(db_dir, config.sqlite_db_name)
+        logger.info(f"儲存到 SQLite: {sqlite_db_path}")
+
+        try:
+            with SQLiteDB(sqlite_db_path) as db:
+                db.insert_records_batch(records)
+            logger.info("SQLite 儲存完成")
+        except Exception as e:
+            logger.error(f"SQLite 儲存失敗: {str(e)}")
+    else:
+        logger.info("SQLite 儲存已停用 (config: save_sqlite = false)")
 
     # 顯示警告訊息
     warnings = processor.get_warnings()
