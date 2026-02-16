@@ -420,6 +420,11 @@ exif_agent/
 - Windows Only
 - 需要安裝 Microsoft Access Database Engine
 - 32/64 位元需與 Python 版本匹配
+- 微軟自家的One Drive不支援開啟AccessDB
+- 可以上傳到Google Drive, 然後用外掛程式 `MDB ACCDB Viewer and Reader` 來看
+- 也可用 MDB Viewer Tool (https://mdbviewer.herokuapp.com/) 線上觀看
+- 或者用 MDB Viewer Plus (http://www.alexnolan.net/software/mdb_viewer_plus.htm) 在本地端看
+  這個也需要安裝 Microsoft Access Database Engine
 
 #### 2. OCR 辨識
 - EasyOCR 首次執行需下載模型
