@@ -563,5 +563,8 @@ logs/exif_agent_YYYYMMDD_HHMMSS.log
 **最後更新**: 2025-10-30
 **版本**: v2.0.0
 
+過去的文件可參考  
+https://docs.google.com/document/d/1T9Ed9F1_3lZvY6rEwUN98xR7Bdo0RptoqBX9KmdtfJ8/edit?usp=sharing
+
 **特別感謝**：本專案基於原始 tkinter 版本重建，感謝所有研究人員的回饋與建議。
 
