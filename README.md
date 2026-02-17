@@ -260,7 +260,6 @@ processing:
   default_time_interval: 30        # 時間間隔（分鐘）
   ocr_engine: "easyocr"           # OCR 引擎（easyocr / tesseract）
   oi_max_one: true                # 同一照片多物種時 OI 最大值為 1（false = 依實際個數）
-  debug_mode: false               # 除錯模式
 
 # 資料庫設定
 database:

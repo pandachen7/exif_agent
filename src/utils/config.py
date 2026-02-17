@@ -21,7 +21,6 @@ class ProcessingConfig(BaseModel):
     default_time_interval: int = 30
     ocr_engine: str = "easyocr"
     oi_max_one: bool = True
-    debug_mode: bool = False
 
 
 class DatabaseConfig(BaseModel):

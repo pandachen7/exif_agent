@@ -22,13 +22,19 @@ processing:
   # true = 最大值為 1，false = 依實際物種數計算
   oi_max_one: true
 
-  # 是否啟用偵錯模式
-  debug_mode: false
-
 # 資料庫設定
 database:
+  # 是否儲存到 Access DB (需安裝 Microsoft Access Database Engine)
+  save_access_db: true
+
+  # 是否儲存到 SQLite
+  save_sqlite: true
+
   # Access DB 檔案名稱
   access_db_name: "exif_data.accdb"
+
+  # SQLite 檔案名稱
+  sqlite_db_name: "exif_data.sqlite"
 
   # Excel 檔案名稱
   excel_file_name: "exif_data.xlsx"
