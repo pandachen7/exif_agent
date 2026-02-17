@@ -61,7 +61,12 @@ def main():
     logger.info(f"時間間隔: {args.time_interval} 分鐘")
     logger.info(f"OCR 引擎: {args.ocr}")
 
-    processor = PhotoProcessor(time_interval=args.time_interval, ocr_engine=args.ocr)
+    config = Config()
+    processor = PhotoProcessor(
+        time_interval=args.time_interval,
+        ocr_engine=args.ocr,
+        oi_max_one=config.oi_max_one,
+    )
 
     # 處理照片
     logger.info("開始處理照片...")
@@ -74,7 +79,6 @@ def main():
     logger.info(f"處理完成，共 {len(records)} 筆記錄")
 
     # 儲存資料
-    config = Config()
     writer = CSVExcelWriter()
 
     # CSV

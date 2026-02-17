@@ -18,6 +18,10 @@ processing:
   # OCR 引擎 (easyocr / tesseract)
   ocr_engine: "easyocr"
 
+  # 同一照片多物種時，OI 貢獻最大值為 1
+  # true = 最大值為 1，false = 依實際物種數計算
+  oi_max_one: true
+
   # 是否啟用偵錯模式
   debug_mode: false
 

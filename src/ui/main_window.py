@@ -288,6 +288,7 @@ class MainWindow(QMainWindow):
         processor = PhotoProcessor(
             time_interval=self.time_interval_spin.value(),
             ocr_engine=self.ocr_combo.currentText(),
+            oi_max_one=self.config.oi_max_one,
         )
 
         # 清空訊息

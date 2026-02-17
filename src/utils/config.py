@@ -34,6 +34,7 @@ class Config:
             "processing": {
                 "default_time_interval": 30,
                 "ocr_engine": "easyocr",
+                "oi_max_one": True,
                 "debug_mode": False,
             },
             "database": {
@@ -96,6 +97,14 @@ class Config:
     @ocr_engine.setter
     def ocr_engine(self, value: str):
         self.set("processing", "ocr_engine", value)
+
+    @property
+    def oi_max_one(self) -> bool:
+        return bool(self.get("processing", "oi_max_one", True))
+
+    @oi_max_one.setter
+    def oi_max_one(self, value: bool):
+        self.set("processing", "oi_max_one", bool(value))
 
     @property
     def debug_mode(self) -> bool:

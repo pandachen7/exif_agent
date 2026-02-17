@@ -17,15 +17,18 @@ logger = getUniqueLogger()
 class PhotoProcessor:
     """照片處理器"""
 
-    def __init__(self, time_interval: int = 30, ocr_engine: str = "easyocr"):
+    def __init__(self, time_interval: int = 30, ocr_engine: str = "easyocr",
+                 oi_max_one: bool = True):
         """
         初始化處理器
 
         Args:
             time_interval: 時間間隔(分鐘)，用於計算有效照片數
             ocr_engine: OCR 引擎，可選 'easyocr' 或 'tesseract'
+            oi_max_one: 同一照片多物種時，OI 貢獻是否限制最大值為 1
         """
         self.time_interval = time_interval
+        self.oi_max_one = oi_max_one
         self.exif_reader = ExifReader()
         self.ocr_detector = OCRDetector(ocr_engine)
         self.csv_writer = CSVExcelWriter()
@@ -81,6 +84,13 @@ class PhotoProcessor:
 
         # 計算有效照片數
         self._calculate_independent_photos(file_records)
+
+        # 限制同一照片的 OI 貢獻最大為 1
+        if self.oi_max_one:
+            self._cap_oi_per_photo(file_records)
+            self.logger.info("OI max one: enabled (同一照片最多貢獻 1)")
+        else:
+            self.logger.info("OI max one: disabled (使用實際個數)")
 
         self.records = file_records
         self.logger.info(f"Processed {len(file_records)} files successfully")
@@ -379,6 +389,45 @@ class PhotoProcessor:
                     last_independent_time = current_time
                 else:
                     group_records[i]["IndependentPhoto"] = 0
+
+    def _cap_oi_per_photo(self, records: List[Dict]):
+        """
+        限制同一張照片的 OI 貢獻最大值為 1
+
+        當一張有效照片包含多種動物（產生多筆記錄）時，
+        只保留其中一筆 IndependentPhoto=1，其餘設為 0。
+        """
+        if not records:
+            return
+
+        # 按照 SourceFile 分組，找出同一照片的所有記錄
+        photo_groups: Dict[str, List[Dict]] = {}
+        for record in records:
+            source_file = record.get("SourceFile", "")
+            if source_file not in photo_groups:
+                photo_groups[source_file] = []
+            photo_groups[source_file].append(record)
+
+        for source_file, group_records in photo_groups.items():
+            # 只處理有多筆記錄的照片
+            if len(group_records) <= 1:
+                continue
+
+            # 計算該照片中 IndependentPhoto=1 的數量
+            independent_records = [
+                r for r in group_records if r.get("IndependentPhoto") == 1
+            ]
+
+            if len(independent_records) <= 1:
+                continue
+
+            # 保留第一筆 IndependentPhoto=1，其餘設為 0
+            self.logger.info(
+                f"{source_file}: {len(independent_records)} independent records "
+                f"found, capping OI to 1"
+            )
+            for r in independent_records[1:]:
+                r["IndependentPhoto"] = 0
 
     def get_warnings(self) -> List[str]:
         """取得警告訊息列表"""
