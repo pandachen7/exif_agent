@@ -241,6 +241,7 @@ OI (Occurrence Index) = 有效照片數 / 相機工作時數 × 1000
 
 - **有效照片**：同一物種在設定時間間隔內只計算一次
 - **相機工作時數**：從第一張照片到最後一張照片的時間差（小時）
+- **OI 最大值限制**：當 `oi_max_one: true` 時，同一張照片即使包含多種動物，對 OI 的貢獻最多為 1；設為 `false` 則依照實際物種數計算
 
 ## 設定檔案
 
@@ -258,6 +259,7 @@ path:
 processing:
   default_time_interval: 30        # 時間間隔（分鐘）
   ocr_engine: "easyocr"           # OCR 引擎（easyocr / tesseract）
+  oi_max_one: true                # 同一照片多物種時 OI 最大值為 1（false = 依實際個數）
   debug_mode: false               # 除錯模式
 
 # 資料庫設定
@@ -457,6 +459,10 @@ exif_agent/
 
 ## 更新記錄
 
+### v2.1.2 (2026-02-17)
+- 新增 `oi_max_one` 設定：同一照片多物種時，OI 貢獻最大值為 1 或依實際個數計算
+- 預設 `true`（限制最大值為 1），可在 `cfg/config.yaml` 中設為 `false` 改用實際個數
+
 ### v2.1.1 (2026-02-17)
 - 新增 SQLite 資料庫輸出，跨平台免驅動
 - Access DB 和 SQLite 統一存放於 `db/` 目錄
@@ -497,7 +503,7 @@ MIT
 ---
 
 **開發維護**: Panda  
-**版本**: v2.1.1
+**版本**: v2.1.2
 
 過去的文件可參考  
 https://docs.google.com/document/d/1T9Ed9F1_3lZvY6rEwUN98xR7Bdo0RptoqBX9KmdtfJ8/edit?usp=sharing
