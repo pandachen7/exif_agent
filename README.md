@@ -25,7 +25,8 @@
 - **警告提示**：缺少 Camera_ID 或發現多物種時自動警告
 
 ### 4. 多格式資料儲存
-- **Access Database** (.accdb) - 完整的關聯式資料庫
+- **Access Database** (.accdb) - 完整的關聯式資料庫（可在 config 中開關）
+- **SQLite** (.sqlite) - 跨平台輕量資料庫，無需安裝額外驅動（可在 config 中開關）
 - **Excel** (.xlsx) - 方便檢視和編輯
 - **CSV** (.csv) - 通用格式，易於匯入其他系統
 
@@ -261,10 +262,15 @@ processing:
 
 # 資料庫設定
 database:
-  access_db_name: "wildlife_data.accdb"
-  excel_file_name: "wildlife_data.xlsx"
-  csv_file_name: "wildlife_data.csv"
+  save_access_db: true                   # 是否儲存到 Access DB（true/false）
+  save_sqlite: true                      # 是否儲存到 SQLite（true/false）
+  access_db_name: "exif_data.accdb"
+  sqlite_db_name: "exif_data.sqlite"
+  excel_file_name: "exif_data.xlsx"
+  csv_file_name: "exif_data.csv"
 ```
+
+> Access DB 和 SQLite 檔案存放在專案的 `db/` 目錄；CSV 和 Excel 存放在設定的 output 目錄。
 
 也可以從範本檔案開始：
 ```bash
@@ -373,10 +379,16 @@ exif_agent/
 │   │   └── ocr_detector.py # OCR 偵測器
 │   ├── database/           # 資料庫模組
 │   │   ├── access_db.py    # Access DB 操作
+│   │   ├── sqlite_db.py    # SQLite 操作
 │   │   └── csv_excel_writer.py # CSV/Excel 寫入
 │   └── utils/              # 工具模組
 │       ├── config.py       # 配置管理
 │       └── logger.py       # 日誌記錄
+│
+├── db/                     # 資料庫檔案資料夾
+│   ├── exif_data.accdb     # Access 資料庫
+│   ├── exif_data.sqlite    # SQLite 資料庫（自動建立）
+│   └── exif_data_替換用空檔案.accdb  # 空白 Access 模板
 │
 ├── doc/                    # 文件資料夾
 │   └── exif2accessDB(EXIF轉換資料表).docx
@@ -395,6 +407,7 @@ exif_agent/
 | `exif_reader.py` | EXIF 資訊提取 | `ExifReader._parse_hierarchical_subject()` |
 | `ocr_detector.py` | OCR 日期辨識 | `OCRDetector.detect_datetime_from_image()` |
 | `access_db.py` | Access DB 操作 | `AccessDB.insert_records_batch()` |
+| `sqlite_db.py` | SQLite 操作 | `SQLiteDB.insert_records_batch()` |
 | `csv_excel_writer.py` | CSV/Excel 輸出 | `CSVExcelWriter.write_to_excel()` |
 | `main_window.py` | PyQt6 介面 | `MainWindow`, `ProcessThread` |
 
@@ -444,6 +457,11 @@ exif_agent/
 
 ## 更新記錄
 
+### v2.1.1 (2026-02-17)
+- 新增 SQLite 資料庫輸出，跨平台免驅動
+- Access DB 和 SQLite 統一存放於 `db/` 目錄
+- `cfg/config.yaml` 新增 `save_access_db` / `save_sqlite` 開關，可個別啟用或停用
+
 ### v2.1.0 (2026-02-16)
 - 移除 PaddleOCR，改用 EasyOCR 作為預設 OCR 引擎
 - 支援 NVIDIA GPU 加速（自動偵測）
@@ -479,7 +497,7 @@ MIT
 ---
 
 **開發維護**: Panda  
-**版本**: v2.1.0
+**版本**: v2.1.1
 
 過去的文件可參考  
 https://docs.google.com/document/d/1T9Ed9F1_3lZvY6rEwUN98xR7Bdo0RptoqBX9KmdtfJ8/edit?usp=sharing
