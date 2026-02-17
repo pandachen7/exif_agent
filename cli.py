@@ -14,7 +14,7 @@ from src.database.access_db import AccessDB
 from src.database.csv_excel_writer import CSVExcelWriter
 from src.database.sqlite_db import SQLiteDB
 from src.processor import PhotoProcessor
-from src.utils.config import Config
+from src.utils.config import cfg
 from src.utils.logger import getUniqueLogger
 
 
@@ -61,11 +61,10 @@ def main():
     logger.info(f"時間間隔: {args.time_interval} 分鐘")
     logger.info(f"OCR 引擎: {args.ocr}")
 
-    config = Config()
     processor = PhotoProcessor(
         time_interval=args.time_interval,
         ocr_engine=args.ocr,
-        oi_max_one=config.oi_max_one,
+        oi_max_one=cfg.processing.oi_max_one,
     )
 
     # 處理照片
@@ -82,19 +81,19 @@ def main():
     writer = CSVExcelWriter()
 
     # CSV
-    csv_path = os.path.join(args.output, config.csv_file_name)
+    csv_path = os.path.join(args.output, cfg.database.csv_file_name)
     logger.info(f"儲存到 CSV: {csv_path}")
     writer.write_to_csv(records, csv_path)
 
     # Excel
-    excel_path = os.path.join(args.output, config.excel_file_name)
+    excel_path = os.path.join(args.output, cfg.database.excel_file_name)
     logger.info(f"儲存到 Excel: {excel_path}")
     writer.write_to_excel(records, excel_path)
 
     # Access DB (直接寫入 db/ 目錄)
     db_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "db")
-    if config.save_access_db and not args.skip_access:
-        access_db_path = os.path.join(db_dir, config.access_db_name)
+    if cfg.database.save_access_db and not args.skip_access:
+        access_db_path = os.path.join(db_dir, cfg.database.access_db_name)
         logger.info(f"儲存到 Access DB: {access_db_path}")
 
         try:
@@ -104,12 +103,12 @@ def main():
         except Exception as e:
             logger.error(f"Access DB 儲存失敗: {str(e)}")
             logger.warning("請確認已安裝 Microsoft Access Database Engine")
-    elif not config.save_access_db:
+    elif not cfg.database.save_access_db:
         logger.info("Access DB 儲存已停用 (config: save_access_db = false)")
 
     # SQLite (儲存到 db/ 目錄)
-    if config.save_sqlite:
-        sqlite_db_path = os.path.join(db_dir, config.sqlite_db_name)
+    if cfg.database.save_sqlite:
+        sqlite_db_path = os.path.join(db_dir, cfg.database.sqlite_db_name)
         logger.info(f"儲存到 SQLite: {sqlite_db_path}")
 
         try:

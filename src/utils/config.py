@@ -1,143 +1,79 @@
 # -*- coding: utf-8 -*-
 """
-配置檔案讀取模組
+配置模組 — 使用 Pydantic BaseModel 多階層定義，模組層級單一實例 cfg
 """
 import os
-from typing import Any
 
+from pydantic import BaseModel
 from ruamel.yaml import YAML
 
+CONFIG_FILE = "cfg/config.yaml"
 
-class Config:
-    """配置管理類別"""
 
-    def __init__(self, config_file: str = "cfg/config.yaml"):
-        self.config_file = config_file
-        self.config = {}
-        self.yaml = YAML()
-        self.yaml.preserve_quotes = True
-        self.yaml.default_flow_style = False
-        self.load_config()
+# ── 子層 Model ──────────────────────────────────────────────
 
-    def load_config(self):
-        """讀取配置檔案"""
-        if os.path.exists(self.config_file):
-            with open(self.config_file, "r", encoding="utf-8") as f:
-                self.config = self.yaml.load(f) or {}
-        else:
-            self.create_default_config()
+class PathConfig(BaseModel):
+    input: str = ""
+    output: str = "./output"
 
-    def create_default_config(self):
-        """建立預設配置檔案"""
-        self.config = {
-            "path": {"input": "", "output": "./output"},
-            "processing": {
-                "default_time_interval": 30,
-                "ocr_engine": "easyocr",
-                "oi_max_one": True,
-                "debug_mode": False,
-            },
-            "database": {
-                "save_access_db": True,
-                "save_sqlite": True,
-                "access_db_name": "exif_data.accdb",
-                "sqlite_db_name": "exif_data.sqlite",
-                "excel_file_name": "exif_data.xlsx",
-                "csv_file_name": "exif_data.csv",
-            },
-        }
-        self.save_config()
 
-    def save_config(self):
-        """儲存配置到檔案"""
-        # 確保 cfg 資料夾存在
-        os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
+class ProcessingConfig(BaseModel):
+    default_time_interval: int = 30
+    ocr_engine: str = "easyocr"
+    oi_max_one: bool = True
+    debug_mode: bool = False
 
-        with open(self.config_file, "w", encoding="utf-8") as f:
-            self.yaml.dump(self.config, f)
 
-    def get(self, section: str, key: str, fallback: Any = None) -> Any:
-        """取得配置值"""
-        return self.config.get(section, {}).get(key, fallback)
+class DatabaseConfig(BaseModel):
+    save_access_db: bool = True
+    save_sqlite: bool = True
+    access_db_name: str = "exif_data.accdb"
+    sqlite_db_name: str = "exif_data.sqlite"
+    excel_file_name: str = "exif_data.xlsx"
+    csv_file_name: str = "exif_data.csv"
 
-    def set(self, section: str, key: str, value: Any):
-        """設定配置值"""
-        if section not in self.config:
-            self.config[section] = {}
-        self.config[section][key] = value
 
-    @property
-    def path_input(self) -> str:
-        return self.get("path", "input", "")
+# ── 頂層 Model ──────────────────────────────────────────────
 
-    @path_input.setter
-    def path_input(self, value: str):
-        self.set("path", "input", value)
+class AppConfig(BaseModel):
+    path: PathConfig = PathConfig()
+    processing: ProcessingConfig = ProcessingConfig()
+    database: DatabaseConfig = DatabaseConfig()
 
-    @property
-    def path_output(self) -> str:
-        return self.get("path", "output", "./output")
+    # ── I/O ──
 
-    @path_output.setter
-    def path_output(self, value: str):
-        self.set("path", "output", value)
+    def save(self, config_file: str = CONFIG_FILE):
+        """儲存配置到 YAML 檔案"""
+        os.makedirs(os.path.dirname(config_file), exist_ok=True)
+        yaml = YAML()
+        yaml.default_flow_style = False
+        with open(config_file, "w", encoding="utf-8") as f:
+            yaml.dump(self.model_dump(), f)
 
-    @property
-    def time_interval(self) -> int:
-        return int(self.get("processing", "default_time_interval", 30))
+    def reload(self, config_file: str = CONFIG_FILE):
+        """從 YAML 重新載入配置（就地更新）"""
+        fresh = _load_from_yaml(config_file)
+        # 用新值覆蓋所有欄位
+        for field in self.__class__.model_fields:
+            setattr(self, field, getattr(fresh, field))
 
-    @time_interval.setter
-    def time_interval(self, value: int):
-        self.set("processing", "default_time_interval", int(value))
 
-    @property
-    def ocr_engine(self) -> str:
-        return self.get("processing", "ocr_engine", "easyocr")
+# ── 載入邏輯 ────────────────────────────────────────────────
 
-    @ocr_engine.setter
-    def ocr_engine(self, value: str):
-        self.set("processing", "ocr_engine", value)
+def _load_from_yaml(config_file: str = CONFIG_FILE) -> AppConfig:
+    """從 YAML 檔案載入，若檔案不存在則建立預設值"""
+    if os.path.exists(config_file):
+        yaml = YAML()
+        with open(config_file, "r", encoding="utf-8") as f:
+            data = yaml.load(f) or {}
+        return AppConfig.model_validate(data)
 
-    @property
-    def oi_max_one(self) -> bool:
-        return bool(self.get("processing", "oi_max_one", True))
+    # 檔案不存在 → 建立預設
+    config = AppConfig()
+    config.save(config_file)
+    return config
 
-    @oi_max_one.setter
-    def oi_max_one(self, value: bool):
-        self.set("processing", "oi_max_one", bool(value))
 
-    @property
-    def debug_mode(self) -> bool:
-        return bool(self.get("processing", "debug_mode", False))
+# ── 模組層級單一實例 ─────────────────────────────────────────
 
-    @property
-    def save_access_db(self) -> bool:
-        return bool(self.get("database", "save_access_db", True))
-
-    @save_access_db.setter
-    def save_access_db(self, value: bool):
-        self.set("database", "save_access_db", bool(value))
-
-    @property
-    def save_sqlite(self) -> bool:
-        return bool(self.get("database", "save_sqlite", True))
-
-    @save_sqlite.setter
-    def save_sqlite(self, value: bool):
-        self.set("database", "save_sqlite", bool(value))
-
-    @property
-    def access_db_name(self) -> str:
-        return self.get("database", "access_db_name", "exif_data.accdb")
-
-    @property
-    def sqlite_db_name(self) -> str:
-        return self.get("database", "sqlite_db_name", "exif_data.sqlite")
-
-    @property
-    def excel_file_name(self) -> str:
-        return self.get("database", "excel_file_name", "exif_data.xlsx")
-
-    @property
-    def csv_file_name(self) -> str:
-        return self.get("database", "csv_file_name", "exif_data.csv")
+cfg: AppConfig = _load_from_yaml()

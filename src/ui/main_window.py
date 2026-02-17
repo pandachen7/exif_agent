@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from src.utils.config import Config
+from src.utils.config import cfg
 from src.utils.logger import getUniqueLogger
 
 logger = getUniqueLogger()
@@ -127,7 +127,6 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.config = Config()
         self.process_thread = None
         self.init_ui()
 
@@ -150,7 +149,7 @@ class MainWindow(QMainWindow):
         # 輸入路徑
         input_layout = QHBoxLayout()
         input_layout.addWidget(QLabel("輸入資料夾:"))
-        self.input_path_edit = QLineEdit(self.config.path_input)
+        self.input_path_edit = QLineEdit(cfg.path.input)
         input_layout.addWidget(self.input_path_edit)
         self.input_browse_btn = QPushButton("瀏覽...")
         self.input_browse_btn.clicked.connect(self.browse_input_path)
@@ -160,7 +159,7 @@ class MainWindow(QMainWindow):
         # 輸出路徑
         output_layout = QHBoxLayout()
         output_layout.addWidget(QLabel("輸出資料夾:"))
-        self.output_path_edit = QLineEdit(self.config.path_output)
+        self.output_path_edit = QLineEdit(cfg.path.output)
         output_layout.addWidget(self.output_path_edit)
         self.output_browse_btn = QPushButton("瀏覽...")
         self.output_browse_btn.clicked.connect(self.browse_output_path)
@@ -179,7 +178,7 @@ class MainWindow(QMainWindow):
         self.time_interval_spin = QSpinBox()
         self.time_interval_spin.setMinimum(1)
         self.time_interval_spin.setMaximum(1440)  # 最大 24 小時
-        self.time_interval_spin.setValue(self.config.time_interval)
+        self.time_interval_spin.setValue(cfg.processing.default_time_interval)
         self.time_interval_spin.setToolTip("用於計算有效照片數的時間間隔")
         settings_layout.addWidget(self.time_interval_spin)
 
@@ -187,7 +186,7 @@ class MainWindow(QMainWindow):
         settings_layout.addWidget(QLabel("OCR 引擎:"))
         self.ocr_combo = QComboBox()
         self.ocr_combo.addItems(["easyocr", "tesseract"])
-        self.ocr_combo.setCurrentText(self.config.ocr_engine)
+        self.ocr_combo.setCurrentText(cfg.processing.ocr_engine)
         self.ocr_combo.setToolTip("選擇 OCR 辨識引擎")
         settings_layout.addWidget(self.ocr_combo)
 
@@ -246,11 +245,11 @@ class MainWindow(QMainWindow):
 
     def save_config(self):
         """儲存設定"""
-        self.config.path_input = self.input_path_edit.text()
-        self.config.path_output = self.output_path_edit.text()
-        self.config.time_interval = self.time_interval_spin.value()
-        self.config.ocr_engine = self.ocr_combo.currentText()
-        self.config.save_config()
+        cfg.path.input = self.input_path_edit.text()
+        cfg.path.output = self.output_path_edit.text()
+        cfg.processing.default_time_interval = self.time_interval_spin.value()
+        cfg.processing.ocr_engine = self.ocr_combo.currentText()
+        cfg.save()
 
         QMessageBox.information(self, "成功", "設定已儲存")
         self.statusBar().showMessage("設定已儲存", 3000)
@@ -277,10 +276,10 @@ class MainWindow(QMainWindow):
         # 建立輸出檔案路徑
         # Access DB 和 SQLite 存放在專案 db/ 目錄
         db_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "db")
-        access_db_path = os.path.join(db_dir, self.config.access_db_name)
-        sqlite_db_path = os.path.join(db_dir, self.config.sqlite_db_name)
-        excel_path = os.path.join(output_path, self.config.excel_file_name)
-        csv_path = os.path.join(output_path, self.config.csv_file_name)
+        access_db_path = os.path.join(db_dir, cfg.database.access_db_name)
+        sqlite_db_path = os.path.join(db_dir, cfg.database.sqlite_db_name)
+        excel_path = os.path.join(output_path, cfg.database.excel_file_name)
+        csv_path = os.path.join(output_path, cfg.database.csv_file_name)
 
         # 建立處理器
         from src.processor import PhotoProcessor
@@ -288,7 +287,7 @@ class MainWindow(QMainWindow):
         processor = PhotoProcessor(
             time_interval=self.time_interval_spin.value(),
             ocr_engine=self.ocr_combo.currentText(),
-            oi_max_one=self.config.oi_max_one,
+            oi_max_one=cfg.processing.oi_max_one,
         )
 
         # 清空訊息
@@ -298,8 +297,8 @@ class MainWindow(QMainWindow):
         self.process_thread = ProcessThread(
             processor, input_path, output_path, access_db_path, sqlite_db_path,
             excel_path, csv_path,
-            save_access_db=self.config.save_access_db,
-            save_sqlite=self.config.save_sqlite,
+            save_access_db=cfg.database.save_access_db,
+            save_sqlite=cfg.database.save_sqlite,
         )
         self.process_thread.progress.connect(self.update_progress)
         self.process_thread.finished.connect(self.processing_finished)
@@ -352,7 +351,7 @@ class MainWindow(QMainWindow):
                 cleared = []
 
                 # 清空 Access DB
-                access_db_path = os.path.join(db_dir, self.config.access_db_name)
+                access_db_path = os.path.join(db_dir, cfg.database.access_db_name)
                 if os.path.exists(access_db_path):
                     try:
                         from src.database.access_db import AccessDB
@@ -364,7 +363,7 @@ class MainWindow(QMainWindow):
                         logger.warning(f"清空 Access DB 失敗: {str(e)}")
 
                 # 清空 SQLite
-                sqlite_db_path = os.path.join(db_dir, self.config.sqlite_db_name)
+                sqlite_db_path = os.path.join(db_dir, cfg.database.sqlite_db_name)
                 if os.path.exists(sqlite_db_path):
                     try:
                         from src.database.sqlite_db import SQLiteDB
