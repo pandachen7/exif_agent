@@ -97,6 +97,8 @@ https://www.notion.so/PyTorch-30936ed5d3d680ceb0e1ed1dc8c2c7bf?source=copy_link
 5. **安裝相依套件**
 ```bash
 pip install -r requirements.txt
+# 如果需要執行main.py以外的python script, 則
+pip install -e .
 ```
 
 > 純 CPU 環境直接執行此步驟即可，EasyOCR 會自動以 CPU 模式運行。
