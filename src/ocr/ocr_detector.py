@@ -10,7 +10,7 @@ from typing import Optional
 import cv2
 import numpy as np
 
-from src.utils.logger import getUniqueLogger
+from utils.logger import getUniqueLogger
 
 OCR_ALLOWLIST = "0123456789/-:. APMapm"
 
