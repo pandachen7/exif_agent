@@ -9,7 +9,7 @@ from typing import Optional
 
 from src.utils.logger import getUniqueLogger
 
-logger = getUniqueLogger()
+log = getUniqueLogger(__file__)
 
 
 class OCRDetector:
@@ -23,7 +23,6 @@ class OCRDetector:
             engine: OCR 引擎，可選 'easyocr' 或 'tesseract'
         """
         self.engine = engine.lower()
-        self.logger = logger
         self.ocr = None
 
         if self.engine == "easyocr":
@@ -31,19 +30,22 @@ class OCRDetector:
         elif self.engine == "tesseract":
             self._init_tesseract()
         else:
-            self.logger.warning(f"Unknown OCR engine: {engine}, using easyocr")
+            log.warning(f"Unknown OCR engine: {engine}, using easyocr")
             self.engine = "easyocr"
             self._init_easyocr()
 
     def _init_easyocr(self):
         """初始化 EasyOCR"""
         try:
+            import torch  # 必須先import, 以免出問題
+
+            log.i(f"Can use CUDA? {torch.cuda.is_available()}")
             import easyocr
 
             self.ocr = easyocr.Reader(["en"], gpu=self._check_gpu())
-            self.logger.info("EasyOCR initialized successfully")
+            log.info("EasyOCR initialized successfully")
         except Exception as e:
-            self.logger.error(f"Failed to initialize EasyOCR: {str(e)}")
+            log.error(f"Failed to initialize EasyOCR: {str(e)}")
             self.ocr = None
 
     def _check_gpu(self) -> bool:
@@ -53,12 +55,12 @@ class OCRDetector:
 
             available = torch.cuda.is_available()
             if available:
-                self.logger.info(f"CUDA GPU detected: {torch.cuda.get_device_name(0)}")
+                log.info(f"CUDA GPU detected: {torch.cuda.get_device_name(0)}")
             else:
-                self.logger.info("No CUDA GPU detected, using CPU")
+                log.info("No CUDA GPU detected, using CPU")
             return available
         except ImportError:
-            self.logger.info("torch not installed, using CPU")
+            log.info("torch not installed, using CPU")
             return False
 
     def _init_tesseract(self):
@@ -67,9 +69,9 @@ class OCRDetector:
             import pytesseract
 
             self.ocr = pytesseract
-            self.logger.info("Tesseract OCR initialized successfully")
+            log.info("Tesseract OCR initialized successfully")
         except Exception as e:
-            self.logger.error(f"Failed to initialize Tesseract: {str(e)}")
+            log.error(f"Failed to initialize Tesseract: {str(e)}")
             self.ocr = None
 
     def detect_datetime_from_image(self, image_path: str) -> Optional[datetime]:
@@ -83,7 +85,7 @@ class OCRDetector:
             偵測到的日期時間，若失敗則返回 None
         """
         if self.ocr is None:
-            self.logger.error("OCR engine not initialized")
+            log.error("OCR engine not initialized")
             return None
 
         try:
@@ -92,7 +94,7 @@ class OCRDetector:
             elif self.engine == "tesseract":
                 return self._detect_with_tesseract(image_path)
         except Exception as e:
-            self.logger.error(f"OCR detection failed for {image_path}: {str(e)}")
+            log.error(f"OCR detection failed for {image_path}: {str(e)}")
             return None
 
         return None
@@ -110,21 +112,19 @@ class OCRDetector:
 
             # 合併文字並嘗試解析日期
             full_text = " ".join(text_lines)
-            self.logger.debug(f"OCR detected text: {full_text}")
+            log.debug(f"OCR detected text: {full_text}")
 
             detected_dt = self._parse_datetime_from_text(full_text)
 
             if detected_dt:
-                self.logger.info(f"OCR detected datetime: {detected_dt}")
+                log.info(f"OCR detected datetime: {detected_dt}")
             else:
-                self.logger.warning(
-                    f"Could not parse datetime from OCR text: {full_text}"
-                )
+                log.warning(f"Could not parse datetime from OCR text: {full_text}")
 
             return detected_dt
 
         except Exception as e:
-            self.logger.error(f"EasyOCR detection error: {str(e)}")
+            log.error(f"EasyOCR detection error: {str(e)}")
             return None
 
     def _detect_with_tesseract(self, image_path: str) -> Optional[datetime]:
@@ -136,20 +136,20 @@ class OCRDetector:
             img = Image.open(image_path)
             text = pytesseract.image_to_string(img)
 
-            self.logger.debug(f"OCR detected text: {text}")
+            log.debug(f"OCR detected text: {text}")
 
             # 嘗試從文字中提取日期時間
             detected_dt = self._parse_datetime_from_text(text)
 
             if detected_dt:
-                self.logger.info(f"OCR detected datetime: {detected_dt}")
+                log.info(f"OCR detected datetime: {detected_dt}")
             else:
-                self.logger.warning(f"Could not parse datetime from OCR text: {text}")
+                log.warning(f"Could not parse datetime from OCR text: {text}")
 
             return detected_dt
 
         except Exception as e:
-            self.logger.error(f"Tesseract detection error: {str(e)}")
+            log.error(f"Tesseract detection error: {str(e)}")
             return None
 
     def _parse_datetime_from_text(self, text: str) -> Optional[datetime]:
@@ -192,7 +192,7 @@ class OCRDetector:
                         return dt
 
                 except ValueError as e:
-                    self.logger.debug(f"Invalid datetime from pattern: {str(e)}")
+                    log.debug(f"Invalid datetime from pattern: {str(e)}")
                     continue
 
         return None
@@ -205,4 +205,4 @@ class OCRDetector:
                 self._init_easyocr()
             elif self.engine == "tesseract":
                 self._init_tesseract()
-            self.logger.info(f"Switched OCR engine to: {self.engine}")
+            log.info(f"Switched OCR engine to: {self.engine}")

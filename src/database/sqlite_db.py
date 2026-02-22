@@ -9,7 +9,7 @@ from typing import Dict, List
 
 from src.utils.logger import getUniqueLogger
 
-logger = getUniqueLogger()
+log = getUniqueLogger(__file__)
 
 
 class SQLiteDB:
@@ -25,7 +25,6 @@ class SQLiteDB:
         self.db_path = db_path
         self.connection = None
         self.cursor = None
-        self.logger = logger
 
     def connect(self):
         """連接到 SQLite 資料庫"""
@@ -35,13 +34,13 @@ class SQLiteDB:
 
             self.connection = sqlite3.connect(self.db_path)
             self.cursor = self.connection.cursor()
-            self.logger.info(f"Connected to SQLite DB: {self.db_path}")
+            log.info(f"Connected to SQLite DB: {self.db_path}")
 
             # 確保資料表存在
             self._ensure_tables_exist()
 
         except sqlite3.Error as e:
-            self.logger.error(f"Failed to connect to SQLite DB: {str(e)}")
+            log.error(f"Failed to connect to SQLite DB: {str(e)}")
             raise
 
     def _ensure_tables_exist(self):
@@ -74,7 +73,7 @@ class SQLiteDB:
             self.cursor.execute(create_table_sql)
             self.connection.commit()
         except sqlite3.Error as e:
-            self.logger.error(f"Failed to create file_record table: {str(e)}")
+            log.error(f"Failed to create file_record table: {str(e)}")
 
     def insert_record(self, record: Dict):
         """
@@ -114,7 +113,7 @@ class SQLiteDB:
             self.connection.commit()
 
         except sqlite3.Error as e:
-            self.logger.error(f"Failed to insert record: {str(e)}")
+            log.error(f"Failed to insert record: {str(e)}")
             raise
 
     def insert_records_batch(self, records: List[Dict]):
@@ -127,7 +126,7 @@ class SQLiteDB:
         for record in records:
             self.insert_record(record)
 
-        self.logger.info(f"Inserted {len(records)} records into SQLite")
+        log.info(f"Inserted {len(records)} records into SQLite")
 
     def clear_table(self, table_name: str = "file_record"):
         """
@@ -140,9 +139,9 @@ class SQLiteDB:
             sql = f"DELETE FROM {table_name}"
             self.cursor.execute(sql)
             self.connection.commit()
-            self.logger.info(f"Cleared table: {table_name}")
+            log.info(f"Cleared table: {table_name}")
         except sqlite3.Error as e:
-            self.logger.error(f"Failed to clear table {table_name}: {str(e)}")
+            log.error(f"Failed to clear table {table_name}: {str(e)}")
 
     def close(self):
         """關閉資料庫連接"""
@@ -150,7 +149,7 @@ class SQLiteDB:
             self.cursor.close()
         if self.connection:
             self.connection.close()
-        self.logger.info("Closed SQLite DB connection")
+        log.info("Closed SQLite DB connection")
 
     def __enter__(self):
         """支援 with 語句"""

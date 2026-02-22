@@ -10,7 +10,7 @@ import pyodbc
 
 from src.utils.logger import getUniqueLogger
 
-logger = getUniqueLogger()
+log = getUniqueLogger(__file__)
 
 
 class AccessDB:
@@ -26,7 +26,6 @@ class AccessDB:
         self.db_path = db_path
         self.connection = None
         self.cursor = None
-        self.logger = logger
 
     def connect(self):
         """連接到 Access 資料庫"""
@@ -43,13 +42,13 @@ class AccessDB:
 
             self.connection = pyodbc.connect(conn_str)
             self.cursor = self.connection.cursor()
-            self.logger.info(f"Connected to Access DB: {self.db_path}")
+            log.info(f"Connected to Access DB: {self.db_path}")
 
             # 確保資料表存在
             self._ensure_tables_exist()
 
         except pyodbc.Error as e:
-            self.logger.error(f"Failed to connect to Access DB: {str(e)}")
+            log.error(f"Failed to connect to Access DB: {str(e)}")
             raise
 
     def _create_new_database(self):
@@ -60,11 +59,11 @@ class AccessDB:
 
             adox = win32com.client.Dispatch("ADOX.Catalog")
             adox.Create(f"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={self.db_path}")
-            self.logger.info(f"Created new Access DB: {self.db_path}")
+            log.info(f"Created new Access DB: {self.db_path}")
         except Exception as e:
-            self.logger.error(f"Failed to create Access DB: {str(e)}")
+            log.error(f"Failed to create Access DB: {str(e)}")
             # 如果 win32com 不可用，記錄警告
-            self.logger.warning("Please create an empty .accdb file manually")
+            log.warning("Please create an empty .accdb file manually")
             raise
 
     def _ensure_tables_exist(self):
@@ -101,9 +100,9 @@ class AccessDB:
         try:
             self.cursor.execute(create_table_sql)
             self.connection.commit()
-            self.logger.info("Created file_record table")
+            log.info("Created file_record table")
         except pyodbc.Error as e:
-            self.logger.error(f"Failed to create file_record table: {str(e)}")
+            log.error(f"Failed to create file_record table: {str(e)}")
 
     def insert_record(self, record: Dict):
         """
@@ -145,7 +144,7 @@ class AccessDB:
             self.connection.commit()
 
         except pyodbc.Error as e:
-            self.logger.error(f"Failed to insert record: {str(e)}")
+            log.error(f"Failed to insert record: {str(e)}")
             raise
 
     def insert_records_batch(self, records: List[Dict]):
@@ -158,7 +157,7 @@ class AccessDB:
         for record in records:
             self.insert_record(record)
 
-        self.logger.info(f"Inserted {len(records)} records")
+        log.info(f"Inserted {len(records)} records")
 
     def clear_table(self, table_name: str = "file_record"):
         """
@@ -171,9 +170,9 @@ class AccessDB:
             sql = f"DELETE FROM {table_name}"
             self.cursor.execute(sql)
             self.connection.commit()
-            self.logger.info(f"Cleared table: {table_name}")
+            log.info(f"Cleared table: {table_name}")
         except pyodbc.Error as e:
-            self.logger.error(f"Failed to clear table {table_name}: {str(e)}")
+            log.error(f"Failed to clear table {table_name}: {str(e)}")
 
     def close(self):
         """關閉資料庫連接"""
@@ -181,7 +180,7 @@ class AccessDB:
             self.cursor.close()
         if self.connection:
             self.connection.close()
-        self.logger.info("Closed Access DB connection")
+        log.info("Closed Access DB connection")
 
     def __enter__(self):
         """支援 with 語句"""

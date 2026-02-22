@@ -11,7 +11,7 @@ import exifread
 
 from src.utils.logger import getUniqueLogger
 
-logger = getUniqueLogger()
+log = getUniqueLogger(__file__)
 
 
 class ExifReader:
@@ -23,7 +23,7 @@ class ExifReader:
     VIDEO_EXTENSIONS = {".avi", ".mov", ".mp4", ".mpg", ".mpeg"}
 
     def __init__(self):
-        self.logger = logger
+        pass
 
     def is_supported_file(self, file_path: str) -> bool:
         """檢查檔案是否為支援的格式"""
@@ -41,7 +41,7 @@ class ExifReader:
             包含 EXIF 資訊的字典
         """
         if not os.path.exists(file_path):
-            self.logger.error(f"File not found: {file_path}")
+            log.error(f"File not found: {file_path}")
             return {}
 
         exif_data = {
@@ -74,7 +74,7 @@ class ExifReader:
             self._extract_xmp_tags(tags, exif_data)
 
         except Exception as e:
-            self.logger.error(f"Error reading EXIF from {file_path}: {str(e)}")
+            log.error(f"Error reading EXIF from {file_path}: {str(e)}")
 
         return exif_data
 
@@ -200,9 +200,7 @@ class ExifReader:
                         animal["Number"] = numbers[i]
                     else:
                         animal["Number"] = 1
-                self.logger.info(
-                    f"Found {len(animal_tags)} animal tags in HierarchicalSubject"
-                )
+                log.info(f"Found {len(animal_tags)} animal tags in HierarchicalSubject")
             elif len(animal_tags) == 1:
                 # 只有一個動物標籤，正常處理
                 exif_data["Group"] = animal_tags[0].get("Group", "")
@@ -213,7 +211,7 @@ class ExifReader:
                 exif_data["Number"] = numbers[0] if numbers else 1
 
         except Exception as e:
-            self.logger.warning(f"Error parsing HierarchicalSubject: {str(e)}")
+            log.warning(f"Error parsing HierarchicalSubject: {str(e)}")
 
     def scan_directory(self, directory: str) -> List[str]:
         """
@@ -232,5 +230,5 @@ class ExifReader:
                 if self.is_supported_file(file_path):
                     files.append(file_path)
 
-        self.logger.info(f"Found {len(files)} supported files in {directory}")
+        log.info(f"Found {len(files)} supported files in {directory}")
         return files

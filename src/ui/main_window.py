@@ -23,7 +23,7 @@ from PyQt6.QtWidgets import (
 from src.utils.config import cfg
 from src.utils.logger import getUniqueLogger
 
-logger = getUniqueLogger()
+logger = getUniqueLogger(__file__)
 
 
 class ProcessThread(QThread):
@@ -33,8 +33,16 @@ class ProcessThread(QThread):
     finished = pyqtSignal(bool, str)  # 完成訊號 (成功, 訊息)
 
     def __init__(
-        self, processor, input_path, output_path, access_db_path, sqlite_db_path,
-        excel_path, csv_path, save_access_db=True, save_sqlite=True
+        self,
+        processor,
+        input_path,
+        output_path,
+        access_db_path,
+        sqlite_db_path,
+        excel_path,
+        csv_path,
+        save_access_db=True,
+        save_sqlite=True,
     ):
         super().__init__()
         self.processor = processor
@@ -275,7 +283,12 @@ class MainWindow(QMainWindow):
 
         # 建立輸出檔案路徑
         # Access DB 和 SQLite 存放在專案 db/ 目錄
-        db_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "db")
+        db_dir = os.path.join(
+            os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            ),
+            "db",
+        )
         access_db_path = os.path.join(db_dir, cfg.database.access_db_name)
         sqlite_db_path = os.path.join(db_dir, cfg.database.sqlite_db_name)
         excel_path = os.path.join(output_path, cfg.database.excel_file_name)
@@ -295,8 +308,13 @@ class MainWindow(QMainWindow):
 
         # 建立並啟動執行緒
         self.process_thread = ProcessThread(
-            processor, input_path, output_path, access_db_path, sqlite_db_path,
-            excel_path, csv_path,
+            processor,
+            input_path,
+            output_path,
+            access_db_path,
+            sqlite_db_path,
+            excel_path,
+            csv_path,
             save_access_db=cfg.database.save_access_db,
             save_sqlite=cfg.database.save_sqlite,
         )
@@ -347,7 +365,12 @@ class MainWindow(QMainWindow):
             try:
                 import os
 
-                db_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "db")
+                db_dir = os.path.join(
+                    os.path.dirname(
+                        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                    ),
+                    "db",
+                )
                 cleared = []
 
                 # 清空 Access DB
@@ -375,7 +398,9 @@ class MainWindow(QMainWindow):
                         logger.warning(f"清空 SQLite 失敗: {str(e)}")
 
                 if cleared:
-                    QMessageBox.information(self, "成功", f"已清空: {', '.join(cleared)}")
+                    QMessageBox.information(
+                        self, "成功", f"已清空: {', '.join(cleared)}"
+                    )
                     self.statusBar().showMessage("資料表已清空", 3000)
                 else:
                     QMessageBox.warning(self, "警告", "找不到資料庫檔案")

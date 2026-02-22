@@ -9,14 +9,14 @@ import pandas as pd
 
 from src.utils.logger import getUniqueLogger
 
-logger = getUniqueLogger()
+log = getUniqueLogger(__file__)
 
 
 class CSVExcelWriter:
     """CSV 和 Excel 資料寫入器"""
 
     def __init__(self):
-        self.logger = logger
+        pass
 
     def write_to_csv(self, records: List[Dict], csv_path: str):
         """
@@ -28,7 +28,7 @@ class CSVExcelWriter:
         """
         try:
             if not records:
-                self.logger.warning("No records to write to CSV")
+                log.warning("No records to write to CSV")
                 return
 
             # 轉換為 DataFrame
@@ -39,10 +39,10 @@ class CSVExcelWriter:
 
             # 寫入 CSV
             df.to_csv(csv_path, index=False, encoding="utf-8-sig")
-            self.logger.info(f"Written {len(records)} records to CSV: {csv_path}")
+            log.info(f"Written {len(records)} records to CSV: {csv_path}")
 
         except Exception as e:
-            self.logger.error(f"Failed to write CSV: {str(e)}")
+            log.error(f"Failed to write CSV: {str(e)}")
             raise
 
     def write_to_excel(self, records: List[Dict], excel_path: str):
@@ -55,7 +55,7 @@ class CSVExcelWriter:
         """
         try:
             if not records:
-                self.logger.warning("No records to write to Excel")
+                log.warning("No records to write to Excel")
                 return
 
             # 轉換為 DataFrame
@@ -68,10 +68,10 @@ class CSVExcelWriter:
             with pd.ExcelWriter(excel_path, engine="openpyxl") as writer:
                 df.to_excel(writer, sheet_name="file_record", index=False)
 
-            self.logger.info(f"Written {len(records)} records to Excel: {excel_path}")
+            log.info(f"Written {len(records)} records to Excel: {excel_path}")
 
         except Exception as e:
-            self.logger.error(f"Failed to write Excel: {str(e)}")
+            log.error(f"Failed to write Excel: {str(e)}")
             raise
 
     def append_to_csv(self, records: List[Dict], csv_path: str):
@@ -97,10 +97,10 @@ class CSVExcelWriter:
 
             # 寫入
             df.to_csv(csv_path, index=False, encoding="utf-8-sig")
-            self.logger.info(f"Appended {len(records)} records to CSV: {csv_path}")
+            log.info(f"Appended {len(records)} records to CSV: {csv_path}")
 
         except Exception as e:
-            self.logger.error(f"Failed to append to CSV: {str(e)}")
+            log.error(f"Failed to append to CSV: {str(e)}")
             raise
 
     def read_csv_datetime(self, csv_path: str) -> Dict[str, str]:
@@ -135,7 +135,7 @@ class CSVExcelWriter:
                     datetime_col = col
 
             if not filename_col or not datetime_col:
-                self.logger.warning(f"CSV {csv_path} missing required columns")
+                log.warning(f"CSV {csv_path} missing required columns")
                 return {}
 
             # 建立對應字典
@@ -146,11 +146,9 @@ class CSVExcelWriter:
                 if filename and datetime_str and datetime_str != "nan":
                     result[filename] = datetime_str
 
-            self.logger.info(
-                f"Read {len(result)} datetime entries from CSV: {csv_path}"
-            )
+            log.info(f"Read {len(result)} datetime entries from CSV: {csv_path}")
             return result
 
         except Exception as e:
-            self.logger.error(f"Failed to read CSV: {str(e)}")
+            log.error(f"Failed to read CSV: {str(e)}")
             return {}

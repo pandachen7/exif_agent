@@ -11,7 +11,7 @@ from src.exif.exif_reader import ExifReader
 from src.ocr.ocr_detector import OCRDetector
 from src.utils.logger import getUniqueLogger
 
-logger = getUniqueLogger()
+log = getUniqueLogger(__file__)
 
 
 class PhotoProcessor:
@@ -32,7 +32,6 @@ class PhotoProcessor:
         self.exif_reader = ExifReader()
         self.ocr_detector = OCRDetector(ocr_engine)
         self.csv_writer = CSVExcelWriter()
-        self.logger = logger
 
         # 儲存處理過的資料
         self.records = []
@@ -48,7 +47,7 @@ class PhotoProcessor:
         Returns:
             處理後的記錄列表
         """
-        self.logger.info(f"Processing directory: {directory}")
+        log.info(f"Processing directory: {directory}")
 
         # 清空之前的資料
         self.records = []
@@ -58,7 +57,7 @@ class PhotoProcessor:
         files = self.exif_reader.scan_directory(directory)
 
         if not files:
-            self.logger.warning(f"No supported files found in {directory}")
+            log.warning(f"No supported files found in {directory}")
             return []
 
         # 尋找 CSV 時間參考檔案
@@ -67,7 +66,7 @@ class PhotoProcessor:
         # 處理每個檔案
         file_records = []
         for i, file_path in enumerate(files):
-            self.logger.info(
+            log.info(
                 f"Processing file {i+1}/{len(files)}: {os.path.basename(file_path)}"
             )
 
@@ -88,12 +87,12 @@ class PhotoProcessor:
         # 限制同一照片的 OI 貢獻最大為 1
         if self.oi_max_one:
             self._cap_oi_per_photo(file_records)
-            self.logger.info("OI max one: enabled (同一照片最多貢獻 1)")
+            log.info("OI max one: enabled (同一照片最多貢獻 1)")
         else:
-            self.logger.info("OI max one: disabled (使用實際個數)")
+            log.info("OI max one: disabled (使用實際個數)")
 
         self.records = file_records
-        self.logger.info(f"Processed {len(file_records)} files successfully")
+        log.info(f"Processed {len(file_records)} files successfully")
 
         return self.records
 
@@ -106,14 +105,14 @@ class PhotoProcessor:
         csv_path = os.path.join(directory, f"{folder_name}.csv")
 
         if os.path.exists(csv_path):
-            self.logger.info(f"Found CSV reference file: {csv_path}")
+            log.info(f"Found CSV reference file: {csv_path}")
             csv_datetime_map = self.csv_writer.read_csv_datetime(csv_path)
         else:
             # 尋找第一個 CSV 檔
             for file in os.listdir(directory):
                 if file.lower().endswith(".csv"):
                     csv_path = os.path.join(directory, file)
-                    self.logger.info(f"Using CSV reference file: {csv_path}")
+                    log.info(f"Using CSV reference file: {csv_path}")
                     csv_datetime_map = self.csv_writer.read_csv_datetime(csv_path)
                     break
 
@@ -147,7 +146,7 @@ class PhotoProcessor:
         )
 
         if not datetime_original:
-            self.logger.warning(
+            log.warning(
                 f"Could not determine datetime for {filename}, using 2000/1/1"
             )
             datetime_original = datetime(2000, 1, 1)
@@ -160,7 +159,7 @@ class PhotoProcessor:
 
             warning = f"WARN: {filename} has {len(multiple_animals)} animal tags"
             self.warnings.append(warning)
-            self.logger.warning(warning)
+            log.warning(warning)
 
             for animal in multiple_animals:
                 record = {
@@ -187,13 +186,13 @@ class PhotoProcessor:
                     ]:
                         warning = f"WARN: {filename} has no Camera_ID tag"
                         self.warnings.append(warning)
-                        self.logger.warning(warning)
+                        log.warning(warning)
 
                 # 只加入有效的記錄（有 Species 且不是 unknown）
                 if record["Species"] and record["Species"].lower() != "unknown":
                     records.append(record)
                 else:
-                    self.logger.info(
+                    log.info(
                         f"Skipping {filename} - {animal}: no valid species tag"
                     )
 
@@ -217,16 +216,17 @@ class PhotoProcessor:
                 "period_start": None,
                 "period_end": None,
             }
+            log.d(record)
 
             # 檢查是否缺少 Camera_ID
             if not record["Camera_ID"]:
                 warning = f"WARN: {filename} has no Camera_ID tag"
                 self.warnings.append(warning)
-                self.logger.warning(warning)
+                log.warning(warning)
 
             # 如果沒有 Species 或 Species 為 unknown，則忽略
             if not record["Species"] or record["Species"].lower() == "unknown":
-                self.logger.info(f"Skipping {filename}: no valid species tag")
+                log.info(f"Skipping {filename}: no valid species tag")
                 return None
 
             return [record]  # 返回列表格式以保持一致性
@@ -253,10 +253,10 @@ class PhotoProcessor:
             try:
                 dt = self._parse_datetime_string(csv_datetime_map[filename])
                 if dt:
-                    self.logger.debug(f"Using CSV datetime for {filename}: {dt}")
+                    log.debug(f"Using CSV datetime for {filename}: {dt}")
                     return dt
             except Exception as e:
-                self.logger.warning(
+                log.warning(
                     f"Failed to parse CSV datetime for {filename}: {str(e)}"
                 )
 
@@ -265,21 +265,21 @@ class PhotoProcessor:
             return exif_data["DateTimeOriginal"]
 
         # 3. 使用 OCR
-        self.logger.warning(f"{filename} has no EXIF CreateDate, using OCR")
+        log.warning(f"{filename} has no EXIF CreateDate, using OCR")
         try:
             dt = self.ocr_detector.detect_datetime_from_image(file_path)
             if dt:
-                self.logger.warning(f"OCR result: {dt}")
+                log.warning(f"OCR result: {dt}")
                 return dt
             else:
-                self.logger.warning(f"OCR failed for {filename}")
+                log.warning(f"OCR failed for {filename}")
         except Exception as e:
-            self.logger.error(f"OCR error for {filename}: {str(e)}")
+            log.error(f"OCR error for {filename}: {str(e)}")
 
         # 4. 使用前一筆記錄
         if previous_records:
             prev_dt = previous_records[-1]["DateTimeOriginal"]
-            self.logger.warning(f"Using previous datetime for {filename}: {prev_dt}")
+            log.warning(f"Using previous datetime for {filename}: {prev_dt}")
             return prev_dt
 
         return None
@@ -341,7 +341,7 @@ class PhotoProcessor:
             period_start = group_records[0]["DateTimeOriginal"]
             period_end = group_records[-1]["DateTimeOriginal"]
 
-            self.logger.info(
+            log.info(
                 f"Camera {camera_id} period: {period_start} ~ {period_end}"
             )
 
@@ -422,7 +422,7 @@ class PhotoProcessor:
                 continue
 
             # 保留第一筆 IndependentPhoto=1，其餘設為 0
-            self.logger.info(
+            log.info(
                 f"{source_file}: {len(independent_records)} independent records "
                 f"found, capping OI to 1"
             )
