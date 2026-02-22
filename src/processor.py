@@ -216,7 +216,6 @@ class PhotoProcessor:
                 "period_start": None,
                 "period_end": None,
             }
-            log.d(record)
 
             # 檢查是否缺少 Camera_ID
             if not record["Camera_ID"]:
