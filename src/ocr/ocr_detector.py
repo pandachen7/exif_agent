@@ -79,7 +79,9 @@ class OCRDetector:
     @staticmethod
     def _preprocess_image(image_path: str) -> list[np.ndarray]:
         """裁切圖片上下 10% 區域，回傳 [bottom_strip, top_strip]"""
-        img = cv2.imread(image_path)
+        # 用 bytes 方式讀取，避免中文路徑問題
+        buf = np.fromfile(image_path, dtype=np.uint8)
+        img = cv2.imdecode(buf, cv2.IMREAD_COLOR)
         if img is None:
             raise ValueError(f"Cannot read image: {image_path}")
 
@@ -189,7 +191,10 @@ class OCRDetector:
             import pytesseract
             from PIL import Image
 
-            img = Image.open(image_path)
+            # 用 bytes 方式讀取，避免中文路徑問題
+            with open(image_path, "rb") as f:
+                img = Image.open(f)
+                img.load()
             text = pytesseract.image_to_string(img)
 
             log.debug(f"OCR detected text: {text}")
