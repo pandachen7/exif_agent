@@ -242,6 +242,8 @@ class MainWindow(QMainWindow):
         )
         if path:
             self.input_path_edit.setText(path)
+            cfg.path.input = path
+            cfg.save()
 
     def browse_output_path(self):
         """選擇輸出資料夾"""
