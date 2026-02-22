@@ -7,7 +7,12 @@ import re
 from datetime import datetime
 from typing import Optional
 
+import cv2
+import numpy as np
+
 from src.utils.logger import getUniqueLogger
+
+OCR_ALLOWLIST = "0123456789/-:. APMapm"
 
 log = getUniqueLogger(__file__)
 
@@ -71,6 +76,46 @@ class OCRDetector:
             log.error(f"Failed to initialize Tesseract: {str(e)}")
             self.ocr = None
 
+    @staticmethod
+    def _preprocess_image(image_path: str) -> list[np.ndarray]:
+        """裁切圖片上下 10% 區域，回傳 [bottom_strip, top_strip]"""
+        img = cv2.imread(image_path)
+        if img is None:
+            raise ValueError(f"Cannot read image: {image_path}")
+
+        h, w = img.shape[:2]
+
+        # 等比縮小到高度 1500
+        if h > 1500:
+            scale = 1500 / h
+            img = cv2.resize(img, (int(w * scale), 1500))
+            h, w = img.shape[:2]
+
+        strip_h = max(int(h * 0.1), 50)
+
+        bottom_strip = img[h - strip_h : h, :, :]
+        top_strip = img[0:strip_h, :, :]
+
+        return [bottom_strip, top_strip]
+
+    @staticmethod
+    def _clean_ocr_text(text: str) -> str:
+        """清理 OCR 文字：修正常見錯字、移除無關字元、正規化空白"""
+        # OCR 常見錯字修正
+        text = text.replace("=", "9")
+        text = text.replace("#", ":")
+
+        # 只保留數字、日期時間分隔符、AM/PM 字母
+        text = re.sub(r"[^0-9/\-:. APMapm]", "", text)
+
+        # 正規化冒號周圍空白: "02: 50" → "02:50", "09 :30" → "09:30"
+        text = re.sub(r"\s*:\s*", ":", text)
+
+        # 壓縮多餘空白
+        text = re.sub(r"\s+", " ", text).strip()
+
+        return text
+
     def detect_datetime_from_image(self, image_path: str) -> Optional[datetime]:
         """
         從圖片中偵測日期時間
@@ -97,32 +142,46 @@ class OCRDetector:
         return None
 
     def _detect_with_easyocr(self, image_path: str) -> Optional[datetime]:
-        """使用 EasyOCR 偵測日期時間"""
+        """使用 EasyOCR 偵測日期時間（裁切上下 10% + 限制字元集）"""
         try:
-            result = self.ocr.readtext(image_path)
-
-            if not result:
-                return None
-
-            # 收集所有識別到的文字
-            text_lines = [item[1] for item in result]
-
-            # 合併文字並嘗試解析日期
-            full_text = " ".join(text_lines)
-            log.debug(f"OCR detected text: {full_text}")
-
-            detected_dt = self._parse_datetime_from_text(full_text)
-
-            if detected_dt:
-                log.info(f"OCR detected datetime: {detected_dt}")
-            else:
-                log.warning(f"Could not parse datetime from OCR text: {full_text}")
-
-            return detected_dt
-
+            strips = self._preprocess_image(image_path)
         except Exception as e:
-            log.error(f"EasyOCR detection error: {str(e)}")
+            log.error(f"Image preprocessing failed: {e}")
             return None
+
+        for idx, strip in enumerate(strips):
+            try:
+                result = self.ocr.readtext(
+                    strip,
+                    allowlist=OCR_ALLOWLIST,
+                    detail=1,
+                    paragraph=False,
+                )
+                if not result:
+                    continue
+
+                text_items = [item[1] for item in result]
+                log.debug(f"OCR strip {idx} raw items: {text_items}")
+
+                # 策略 A：逐項解析
+                detected_dt = self._parse_datetime_from_items(text_items)
+                if detected_dt:
+                    log.info(f"OCR detected datetime (items): {detected_dt}")
+                    return detected_dt
+
+                # 策略 B：合併 + 清理後整段解析
+                cleaned = self._clean_ocr_text(" ".join(text_items))
+                detected_dt = self._parse_datetime_from_text(cleaned)
+                if detected_dt:
+                    log.info(f"OCR detected datetime (joined): {detected_dt}")
+                    return detected_dt
+
+            except Exception as e:
+                log.error(f"EasyOCR detection error on strip {idx}: {e}")
+                continue
+
+        log.warning(f"Could not parse datetime from any strip: {image_path}")
+        return None
 
     def _detect_with_tesseract(self, image_path: str) -> Optional[datetime]:
         """使用 Tesseract 偵測日期時間"""
@@ -149,6 +208,82 @@ class OCRDetector:
             log.error(f"Tesseract detection error: {str(e)}")
             return None
 
+    def _parse_datetime_from_items(
+        self, text_items: list[str]
+    ) -> Optional[datetime]:
+        """
+        從多個 OCR 文字項中解析日期+時間。
+
+        日期和時間可能分屬不同 OCR 文字框，逐一 clean 後分別搜尋。
+        """
+        # YYYY[-/]MM[-/]DD
+        date_ymd = re.compile(r"(\d{4})[-/](\d{1,2})[-/](\d{1,2})")
+        # MM/DD/YYYY
+        date_mdy = re.compile(r"(\d{1,2})/(\d{1,2})/(\d{4})")
+        # 12h: HH:MM[:SS] AM/PM
+        time_12h = re.compile(
+            r"(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM|am|pm)", re.IGNORECASE
+        )
+        # 24h: HH:MM:SS or HH:MM
+        time_24h = re.compile(r"(\d{1,2}):(\d{2})(?::(\d{2}))?")
+
+        found_date: Optional[tuple[int, int, int]] = None
+        found_time: Optional[tuple[int, int, int]] = None
+
+        for raw in text_items:
+            cleaned = self._clean_ocr_text(raw)
+
+            # --- 找日期 ---
+            if found_date is None:
+                m = date_ymd.search(cleaned)
+                if m:
+                    found_date = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+                else:
+                    m = date_mdy.search(cleaned)
+                    if m:
+                        found_date = (
+                            int(m.group(3)),
+                            int(m.group(1)),
+                            int(m.group(2)),
+                        )
+
+            # --- 找時間 ---
+            if found_time is None:
+                m = time_12h.search(cleaned)
+                if m:
+                    h = int(m.group(1))
+                    mi = int(m.group(2))
+                    s = int(m.group(3)) if m.group(3) else 0
+                    period = m.group(4).upper()
+                    if period == "PM" and h != 12:
+                        h += 12
+                    elif period == "AM" and h == 12:
+                        h = 0
+                    found_time = (h, mi, s)
+                else:
+                    m = time_24h.search(cleaned)
+                    if m:
+                        found_time = (
+                            int(m.group(1)),
+                            int(m.group(2)),
+                            int(m.group(3)) if m.group(3) else 0,
+                        )
+
+        if found_date is None:
+            return None
+
+        year, month, day = found_date
+        hour, minute, second = found_time if found_time else (0, 0, 0)
+
+        try:
+            dt = datetime(year, month, day, hour, minute, second)
+            if 1990 <= dt.year <= 2100:
+                return dt
+        except ValueError as e:
+            log.debug(f"Invalid datetime from items: {e}")
+
+        return None
+
     def _parse_datetime_from_text(self, text: str) -> Optional[datetime]:
         """
         從文字中解析日期時間
@@ -156,10 +291,14 @@ class OCRDetector:
         支援多種日期格式:
         - 2020/03/15 15:38:10
         - 2020-03-15 15:38:10
-        - 2020/3/15 15:38:10
-        - 2020.03.15 15:38:10
+        - MM/DD/YYYY HH:MM:SS AM/PM
         """
-        # 常見的日期時間格式
+        # 先嘗試 item-based 解析
+        result = self._parse_datetime_from_items([text])
+        if result:
+            return result
+
+        # fallback: 原始 regex（向後相容）
         patterns = [
             # 完整格式: 年/月/日 時:分:秒
             r"(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})",
