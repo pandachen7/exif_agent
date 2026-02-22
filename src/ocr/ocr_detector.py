@@ -37,9 +37,6 @@ class OCRDetector:
     def _init_easyocr(self):
         """初始化 EasyOCR"""
         try:
-            import torch  # 必須先import, 以免出問題
-
-            log.i(f"Can use CUDA? {torch.cuda.is_available()}")
             import easyocr
 
             self.ocr = easyocr.Reader(["en"], gpu=self._check_gpu())
