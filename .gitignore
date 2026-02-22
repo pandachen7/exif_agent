@@ -58,3 +58,6 @@ cfg/config.yaml
 # exif tool
 exiftool_files/
 exiftool.exe
+
+# sql db
+*.sqlite

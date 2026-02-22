@@ -123,6 +123,11 @@ class ProcessThread(QThread):
                 if len(warnings) > 10:
                     self.progress.emit(f"... 還有 {len(warnings) - 10} 個警告")
 
+            # 顯示缺失 EXIF 資訊報告
+            missing_report = self.processor.get_missing_info_report()
+            if missing_report:
+                self.progress.emit(missing_report)
+
             self.finished.emit(True, f"處理完成！共處理 {len(records)} 筆記錄")
 
         except Exception as e:

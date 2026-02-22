@@ -17,8 +17,12 @@ log = getUniqueLogger(__file__)
 class PhotoProcessor:
     """照片處理器"""
 
-    def __init__(self, time_interval: int = 30, ocr_engine: str = "easyocr",
-                 oi_max_one: bool = True):
+    def __init__(
+        self,
+        time_interval: int = 30,
+        ocr_engine: str = "easyocr",
+        oi_max_one: bool = True,
+    ):
         """
         初始化處理器
 
@@ -36,6 +40,8 @@ class PhotoProcessor:
         # 儲存處理過的資料
         self.records = []
         self.warnings = []
+        # 缺失資訊追蹤: {filename: [missing_field, ...]}
+        self.missing_info: Dict[str, List[str]] = {}
 
     def process_directory(self, directory: str) -> List[Dict]:
         """
@@ -52,6 +58,7 @@ class PhotoProcessor:
         # 清空之前的資料
         self.records = []
         self.warnings = []
+        self.missing_info = {}
 
         # 掃描所有檔案
         files = self.exif_reader.scan_directory(directory)
@@ -140,15 +147,18 @@ class PhotoProcessor:
         # 1. 讀取 EXIF 資訊
         exif_data = self.exif_reader.read_exif(file_path)
 
+        # 1.5 追蹤缺失欄位
+        missing = exif_data.get("missing_fields", [])
+        if missing:
+            self.missing_info[filename] = missing
+
         # 2. 決定日期時間 (優先順序: CSV > EXIF > OCR > 前一筆)
         datetime_original = self._determine_datetime(
             filename, exif_data, csv_datetime_map, file_path, previous_records
         )
 
         if not datetime_original:
-            log.warning(
-                f"Could not determine datetime for {filename}, using 2000/1/1"
-            )
+            log.warning(f"Could not determine datetime for {filename}, using 2000/1/1")
             datetime_original = datetime(2000, 1, 1)
 
         # 3. 檢查是否有多個動物標籤
@@ -192,9 +202,7 @@ class PhotoProcessor:
                 if record["Species"] and record["Species"].lower() != "unknown":
                     records.append(record)
                 else:
-                    log.info(
-                        f"Skipping {filename} - {animal}: no valid species tag"
-                    )
+                    log.info(f"Skipping {filename} - {animal}: no valid species tag")
 
             return records if records else None
 
@@ -255,9 +263,7 @@ class PhotoProcessor:
                     log.debug(f"Using CSV datetime for {filename}: {dt}")
                     return dt
             except Exception as e:
-                log.warning(
-                    f"Failed to parse CSV datetime for {filename}: {str(e)}"
-                )
+                log.warning(f"Failed to parse CSV datetime for {filename}: {str(e)}")
 
         # 2. 檢查 EXIF
         if exif_data.get("DateTimeOriginal"):
@@ -340,9 +346,7 @@ class PhotoProcessor:
             period_start = group_records[0]["DateTimeOriginal"]
             period_end = group_records[-1]["DateTimeOriginal"]
 
-            log.info(
-                f"Camera {camera_id} period: {period_start} ~ {period_end}"
-            )
+            log.info(f"Camera {camera_id} period: {period_start} ~ {period_end}")
 
             # 更新所有記錄
             for record in group_records:
@@ -431,3 +435,46 @@ class PhotoProcessor:
     def get_warnings(self) -> List[str]:
         """取得警告訊息列表"""
         return self.warnings
+
+    def get_missing_info(self) -> Dict[str, List[str]]:
+        """取得缺失資訊 {filename: [missing_field, ...]}"""
+        return self.missing_info
+
+    def get_missing_info_report(self) -> str:
+        """
+        產生缺失資訊的結構化報告文字
+
+        回傳格式:
+          ===== 以下檔案缺少 EXIF 資訊，請使用標籤工具補充 =====
+          RCNX0001.JPG -> 缺少: DateTimeOriginal, Camera_ID (1_Site ID)
+          ...
+        """
+        if not self.missing_info:
+            return ""
+
+        lines = []
+        lines.append("")
+        lines.append("=" * 55)
+        lines.append(" 以下檔案缺少 EXIF 資訊，請使用標籤工具補充")
+        lines.append(" (如 Adobe Bridge / digiKam / ExifTool)")
+        lines.append("=" * 55)
+
+        # 按缺失類別分組
+        by_field: Dict[str, List[str]] = {}
+        for fname, fields in self.missing_info.items():
+            for field in fields:
+                if field not in by_field:
+                    by_field[field] = []
+                by_field[field].append(fname)
+
+        for field, filenames in by_field.items():
+            lines.append(f"\n  [{field}] ({len(filenames)} 個檔案)")
+            for fname in filenames[:20]:
+                lines.append(f"    - {fname}")
+            if len(filenames) > 20:
+                lines.append(f"    ... 還有 {len(filenames) - 20} 個檔案")
+
+        lines.append("")
+        lines.append(f"  共 {len(self.missing_info)} 個檔案需要補充資訊")
+        lines.append("")
+        return "\n".join(lines)
