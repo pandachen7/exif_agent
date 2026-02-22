@@ -69,17 +69,23 @@ class ProcessThread(QThread):
 
             self.progress.emit(f"找到 {len(records)} 筆記錄")
 
-            # 儲存到 CSV
             from database.csv_excel_writer import CSVExcelWriter
 
             writer = CSVExcelWriter()
 
-            self.progress.emit("儲存到 CSV...")
-            writer.write_to_csv(records, self.csv_path)
+            # 儲存到 CSV
+            if cfg.database.save_csv:
+                self.progress.emit("儲存到 CSV...")
+                writer.write_to_csv(records, self.csv_path)
+            else:
+                self.progress.emit("CSV 儲存已停用")
 
             # 儲存到 Excel
-            self.progress.emit("儲存到 Excel...")
-            writer.write_to_excel(records, self.excel_path)
+            if cfg.database.save_excel:
+                self.progress.emit("儲存到 Excel...")
+                writer.write_to_excel(records, self.excel_path)
+            else:
+                self.progress.emit("Excel 儲存已停用")
 
             # 儲存到 Access DB
             if self.save_access_db:

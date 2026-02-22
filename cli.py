@@ -81,14 +81,20 @@ def main():
     writer = CSVExcelWriter()
 
     # CSV
-    csv_path = os.path.join(args.output, cfg.database.csv_file_name)
-    logger.info(f"儲存到 CSV: {csv_path}")
-    writer.write_to_csv(records, csv_path)
+    if cfg.database.save_csv:
+        csv_path = os.path.join(args.output, cfg.database.csv_file_name)
+        logger.info(f"儲存到 CSV: {csv_path}")
+        writer.write_to_csv(records, csv_path)
+    else:
+        logger.info("CSV 儲存已停用 (config: save_csv = false)")
 
     # Excel
-    excel_path = os.path.join(args.output, cfg.database.excel_file_name)
-    logger.info(f"儲存到 Excel: {excel_path}")
-    writer.write_to_excel(records, excel_path)
+    if cfg.database.save_excel:
+        excel_path = os.path.join(args.output, cfg.database.excel_file_name)
+        logger.info(f"儲存到 Excel: {excel_path}")
+        writer.write_to_excel(records, excel_path)
+    else:
+        logger.info("Excel 儲存已停用 (config: save_excel = false)")
 
     # Access DB (直接寫入 db/ 目錄)
     db_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "db")

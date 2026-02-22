@@ -278,6 +278,8 @@ processing:
 database:
   save_access_db: true                   # 是否儲存到 Access DB（true/false）
   save_sqlite: true                      # 是否儲存到 SQLite（true/false）
+  save_excel: true                       # 是否儲存到 Excel（true/false）
+  save_csv: true                         # 是否儲存到 CSV（true/false）
   access_db_name: "exif_data.accdb"
   sqlite_db_name: "exif_data.sqlite"
   excel_file_name: "exif_data.xlsx"

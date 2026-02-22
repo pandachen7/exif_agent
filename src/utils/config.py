@@ -26,6 +26,8 @@ class ProcessingConfig(BaseModel):
 class DatabaseConfig(BaseModel):
     save_access_db: bool = True
     save_sqlite: bool = True
+    save_excel: bool = True
+    save_csv: bool = True
     access_db_name: str = "exif_data.accdb"
     sqlite_db_name: str = "exif_data.sqlite"
     excel_file_name: str = "exif_data.xlsx"
