@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "exif_agent"
+version = "1.0.0"
+description = "EXIF Agent - 照片資訊管理系統"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+# for VSCode / Pylance 
+[tool.pyright]
+pythonPath = "src"
+venvPath = "."
+venv = ".venv"
