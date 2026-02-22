@@ -9,7 +9,7 @@ from typing import Dict, List, Optional
 
 import exifread
 
-from src.utils.logger import getUniqueLogger
+from utils.logger import getUniqueLogger
 
 log = getUniqueLogger(__file__)
 

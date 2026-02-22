@@ -6,10 +6,10 @@ import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
-from src.database.csv_excel_writer import CSVExcelWriter
-from src.exif.exif_reader import ExifReader
-from src.ocr.ocr_detector import OCRDetector
-from src.utils.logger import getUniqueLogger
+from database.csv_excel_writer import CSVExcelWriter
+from exif.exif_reader import ExifReader
+from ocr.ocr_detector import OCRDetector
+from utils.logger import getUniqueLogger
 
 log = getUniqueLogger(__file__)
 

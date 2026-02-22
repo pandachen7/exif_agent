@@ -7,7 +7,7 @@ import sqlite3
 from datetime import datetime
 from typing import Dict, List
 
-from src.utils.logger import getUniqueLogger
+from utils.logger import getUniqueLogger
 
 log = getUniqueLogger(__file__)
 

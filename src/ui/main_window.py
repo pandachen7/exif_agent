@@ -20,8 +20,8 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from src.utils.config import cfg
-from src.utils.logger import getUniqueLogger
+from utils.config import cfg
+from utils.logger import getUniqueLogger
 
 logger = getUniqueLogger(__file__)
 
@@ -70,7 +70,7 @@ class ProcessThread(QThread):
             self.progress.emit(f"找到 {len(records)} 筆記錄")
 
             # 儲存到 CSV
-            from src.database.csv_excel_writer import CSVExcelWriter
+            from database.csv_excel_writer import CSVExcelWriter
 
             writer = CSVExcelWriter()
 
@@ -84,7 +84,7 @@ class ProcessThread(QThread):
             # 儲存到 Access DB
             if self.save_access_db:
                 try:
-                    from src.database.access_db import AccessDB
+                    from database.access_db import AccessDB
 
                     self.progress.emit("儲存到 Access DB...")
 
@@ -101,7 +101,7 @@ class ProcessThread(QThread):
             # 儲存到 SQLite
             if self.save_sqlite:
                 try:
-                    from src.database.sqlite_db import SQLiteDB
+                    from database.sqlite_db import SQLiteDB
 
                     self.progress.emit("儲存到 SQLite...")
 
@@ -297,7 +297,7 @@ class MainWindow(QMainWindow):
         csv_path = os.path.join(output_path, cfg.database.csv_file_name)
 
         # 建立處理器
-        from src.processor import PhotoProcessor
+        from processor import PhotoProcessor
 
         processor = PhotoProcessor(
             time_interval=self.time_interval_spin.value(),
@@ -379,7 +379,7 @@ class MainWindow(QMainWindow):
                 access_db_path = os.path.join(db_dir, cfg.database.access_db_name)
                 if os.path.exists(access_db_path):
                     try:
-                        from src.database.access_db import AccessDB
+                        from database.access_db import AccessDB
 
                         with AccessDB(access_db_path) as db:
                             db.clear_table("file_record")
@@ -391,7 +391,7 @@ class MainWindow(QMainWindow):
                 sqlite_db_path = os.path.join(db_dir, cfg.database.sqlite_db_name)
                 if os.path.exists(sqlite_db_path):
                     try:
-                        from src.database.sqlite_db import SQLiteDB
+                        from database.sqlite_db import SQLiteDB
 
                         with SQLiteDB(sqlite_db_path) as db:
                             db.clear_table("file_record")

@@ -12,8 +12,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import torch  # noqa: F401 — 必須在 PyQt6 之前載入，否則 DLL 衝突 (WinError 1114)
 from PyQt6.QtWidgets import QApplication
 
-from src.ui.main_window import MainWindow
-from src.utils.logger import getUniqueLogger
+from ui.main_window import MainWindow
+from utils.logger import getUniqueLogger
 
 
 def main():

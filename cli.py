@@ -10,12 +10,12 @@ import sys
 # 將 src 目錄加入路徑
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from src.database.access_db import AccessDB
-from src.database.csv_excel_writer import CSVExcelWriter
-from src.database.sqlite_db import SQLiteDB
-from src.processor import PhotoProcessor
-from src.utils.config import cfg
-from src.utils.logger import getUniqueLogger
+from database.access_db import AccessDB
+from database.csv_excel_writer import CSVExcelWriter
+from database.sqlite_db import SQLiteDB
+from processor import PhotoProcessor
+from utils.config import cfg
+from utils.logger import getUniqueLogger
 
 
 def main():

@@ -7,7 +7,7 @@ from typing import Dict, List
 
 import pandas as pd
 
-from src.utils.logger import getUniqueLogger
+from utils.logger import getUniqueLogger
 
 log = getUniqueLogger(__file__)
 
