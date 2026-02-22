@@ -453,17 +453,23 @@ exif_agent/
 - 或者用 MDB Viewer Plus (http://www.alexnolan.net/software/mdb_viewer_plus.htm) 在本地端看
   這個也需要安裝 Microsoft Access Database Engine
 
-#### 2. OCR 辨識
+#### 2. SQLite 瀏覽
+- 到 [DB Browser for SQLite](https://sqlitebrowser.org/dl/) 下載對應版本的 APP
+- 使用此工具開啟專案 `db/` 目錄下的 `*.sqlite` 檔案即可瀏覽資料, 畫面如下
+![img/sql_db_browser.png](img/sql_db_browser.png)
+
+
+#### 3. OCR 辨識
 - EasyOCR 首次執行需下載模型
 - 辨識準確度受照片品質影響
 - 建議準備 CSV 參考檔案以確保時間準確
 
-#### 3. GPU 加速
+#### 4. GPU 加速
 - 僅支援 NVIDIA GPU（CUDA）
 - 需先安裝 GPU 版 PyTorch，再安裝其他套件
 - 純 CPU 環境也完全可用，只是 OCR 速度較慢
 
-#### 4. 標籤格式要求
+#### 5. 標籤格式要求
 - 必須使用 Adobe Bridge 的 HierarchicalSubject 格式
 - Camera_ID 前綴必須為英文字母（如 JC38，不可 12JC）
 - 缺少 Species 標籤的照片會被跳過
