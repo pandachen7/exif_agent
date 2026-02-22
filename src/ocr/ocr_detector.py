@@ -102,16 +102,18 @@ class OCRDetector:
 
     @staticmethod
     def _clean_ocr_text(text: str) -> str:
-        """清理 OCR 文字：修正常見錯字、移除無關字元、正規化空白"""
-        # OCR 常見錯字修正
-        text = text.replace("=", "9")
-        text = text.replace("#", ":")
-
+        """清理 OCR 文字：移除多餘空格、正規化分隔符"""
         # 只保留數字、日期時間分隔符、AM/PM 字母
         text = re.sub(r"[^0-9/\-:. APMapm]", "", text)
 
-        # 正規化冒號周圍空白: "02: 50" → "02:50", "09 :30" → "09:30"
-        text = re.sub(r"\s*:\s*", ":", text)
+        # 移除分隔符周圍的空格: "03 /24" → "03/24", "02 : 50" → "02:50"
+        text = re.sub(r"\s*([/\-:.])\s*", r"\1", text)
+
+        # 移除數字之間的空格: "0 8" → "08", "5 0" → "50"
+        prev = None
+        while prev != text:
+            prev = text
+            text = re.sub(r"(\d)\s+(\d)", r"\1\2", text)
 
         # 壓縮多餘空白
         text = re.sub(r"\s+", " ", text).strip()
@@ -171,8 +173,8 @@ class OCRDetector:
                     log.info(f"OCR detected datetime (items): {detected_dt}")
                     return detected_dt
 
-                # 策略 B：合併 + 清理後整段解析
-                cleaned = self._clean_ocr_text(" ".join(text_items))
+                # 策略 B：逐項清理後合併解析
+                cleaned = " ".join(self._clean_ocr_text(item) for item in text_items)
                 detected_dt = self._parse_datetime_from_text(cleaned)
                 if detected_dt:
                     log.info(f"OCR detected datetime (joined): {detected_dt}")
@@ -221,16 +223,16 @@ class OCRDetector:
 
         日期和時間可能分屬不同 OCR 文字框，逐一 clean 後分別搜尋。
         """
-        # YYYY[-/]MM[-/]DD
-        date_ymd = re.compile(r"(\d{4})[-/](\d{1,2})[-/](\d{1,2})")
+        # YYYY[-/.]MM[-/.]DD
+        date_ymd = re.compile(r"(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})")
         # MM/DD/YYYY
         date_mdy = re.compile(r"(\d{1,2})/(\d{1,2})/(\d{4})")
-        # 12h: HH:MM[:SS] AM/PM
+        # 12h: HH:MM[:SS] AM/PM (分隔符可為 : 或 .)
         time_12h = re.compile(
-            r"(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM|am|pm)", re.IGNORECASE
+            r"(\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?\s*(AM|PM|am|pm)", re.IGNORECASE
         )
-        # 24h: HH:MM:SS or HH:MM
-        time_24h = re.compile(r"(\d{1,2}):(\d{2})(?::(\d{2}))?")
+        # 24h: HH:MM:SS or HH:MM (分隔符可為 : 或 .)
+        time_24h = re.compile(r"(\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?")
 
         found_date: Optional[tuple[int, int, int]] = None
         found_time: Optional[tuple[int, int, int]] = None
@@ -264,15 +266,16 @@ class OCRDetector:
                         h += 12
                     elif period == "AM" and h == 12:
                         h = 0
-                    found_time = (h, mi, s)
+                    if 0 <= h <= 23 and 0 <= mi <= 59 and 0 <= s <= 59:
+                        found_time = (h, mi, s)
                 else:
                     m = time_24h.search(cleaned)
                     if m:
-                        found_time = (
-                            int(m.group(1)),
-                            int(m.group(2)),
-                            int(m.group(3)) if m.group(3) else 0,
-                        )
+                        h = int(m.group(1))
+                        mi = int(m.group(2))
+                        s = int(m.group(3)) if m.group(3) else 0
+                        if 0 <= h <= 23 and 0 <= mi <= 59 and 0 <= s <= 59:
+                            found_time = (h, mi, s)
 
         if found_date is None:
             return None
@@ -303,12 +306,12 @@ class OCRDetector:
         if result:
             return result
 
-        # fallback: 原始 regex（向後相容）
+        # fallback: 原始 regex（向後相容，時間分隔符接受 : 或 .）
         patterns = [
             # 完整格式: 年/月/日 時:分:秒
-            r"(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})",
+            r"(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})\s+(\d{1,2})[:.](\d{1,2})[:.](\d{1,2})",
             # 沒有秒: 年/月/日 時:分
-            r"(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})\s+(\d{1,2}):(\d{1,2})",
+            r"(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})\s+(\d{1,2})[:.](\d{1,2})",
             # 只有日期: 年/月/日
             r"(\d{4})[-/\.](\d{1,2})[-/\.](\d{1,2})",
         ]

@@ -8,6 +8,8 @@ from ocr.ocr_detector import OCRDetector
 def use_easyocr(input_path: str):
     reader = easyocr.Reader(["ch_tra", "en"])  # 繁中+英文
 
+    print("\n=== 原easyOCR測試 ===")
+
     folder_path = Path(input_path)
     for file in folder_path.iterdir():
         if not file.is_file():
