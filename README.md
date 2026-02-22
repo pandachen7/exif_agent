@@ -103,7 +103,18 @@ pip install -e .
 
 > 純 CPU 環境直接執行此步驟即可，EasyOCR 會自動以 CPU 模式運行。
 
-6. **（可選）安裝 Tesseract OCR 作為備用引擎**
+6. **安裝 ExifTool**
+
+使用 ExifTool 讀取更完整的 EXIF 資訊：
+
+1. 到 [ExifTool 官網](https://exiftool.org/) 下載對應平台的執行檔
+2. 將下載的執行檔放到專案根目錄（`exif_agent/`）下
+3. 必須安裝 Python 套件：
+```bash
+pip install pyexiftool
+```
+
+7. **（可選）安裝 Tesseract OCR 作為備用引擎**
 
 Tesseract 是備用的 OCR 引擎，僅在 EasyOCR 無法使用時才需要。
 

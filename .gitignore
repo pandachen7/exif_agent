@@ -54,3 +54,7 @@ cfg/config.yaml
 
 # private
 .env
+
+# exif tool
+exiftool_files/
+exiftool.exe
