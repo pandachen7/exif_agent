@@ -4,8 +4,8 @@ PyQt6-Qt6>=6.6.0
 
 # EXIF Processing
 pyexiftool  # 還是exiftool最完整
-Pillow>=10.0.0
-exifread>=3.0.0
+Pillow>=10.0.0  # 主要用於讀取圖片, exif的部分只能讀取簡單的metadata
+# exifread>=3.0.0  # 效果不理想
 
 # OCR
 easyocr

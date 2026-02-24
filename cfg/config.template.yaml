@@ -1,0 +1,23 @@
+# 請copy一份並命名為 config.yaml
+
+# 路徑設定
+path:
+  input: "D:\\CameraTrap\\2024"   # 預設輸入路徑
+  output: "D:\\Results\\2024"      # 預設輸出路徑
+
+# 處理設定
+processing:
+  default_time_interval: 30        # 時間間隔（分鐘）
+  ocr_engine: "easyocr"           # OCR 引擎（easyocr / tesseract）
+  oi_max_one: true                # 同一照片多物種時 OI 最大值為 1（false = 依實際個數）
+
+# 資料庫設定
+database:
+  save_access_db: false                  # 是否儲存到 Access DB（true/false）
+  save_sqlite: true                      # 是否儲存到 SQLite（true/false）
+  save_excel: true                       # 是否儲存到 Excel（true/false）
+  save_csv: true                         # 是否儲存到 CSV（true/false）
+  access_db_name: "exif_data.accdb"
+  sqlite_db_name: "exif_data.sqlite"
+  excel_file_name: "exif_data.xlsx"
+  csv_file_name: "exif_data.csv"

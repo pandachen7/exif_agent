@@ -1,13 +1,13 @@
 # EXIF Agent - 照片 EXIF 資訊管理系統
 
-這是一個用於處理自動相機照片的 EXIF 資訊提取、OCR 日期辨識以及資料儲存的專業工具。專為野生動物研究和生態調查設計，可自動處理大量相機陷阱照片，提取物種資訊並計算 OI (Occurrence Index) 值。
+專為野生動物研究和生態調查設計, 用於大量處理自動相機(Camera Trap)照片的 EXIF 資訊, 並配合 OCR 日期辨識的資訊補足以及儲存資料列表的工具, 以輔助計算 OI (Occurrence Index) 值. 
 
 ## 核心功能
 
 ### 1. EXIF 資訊提取
-- 自動讀取照片和影片的完整 EXIF 元數據
+- 自動讀取照片和影片的完整 EXIF 資訊
 - 解析 Adobe Bridge 的 HierarchicalSubject 標籤
-- **支援多物種標記**：同一張照片可標記多個物種，自動產生多筆記錄
+- **支援多物種標記**：同一張照片可標記多個物種, 自動產生多筆記錄
 - 自動識別相機站點（Site）、樣點編號（Plot_ID）、相機編號（Camera_ID）
 
 ### 2. 多重日期時間來源
@@ -24,25 +24,25 @@
 - **資料驗證**：自動過濾無效資料（如 unknown 物種）
 - **警告提示**：缺少 Camera_ID 或發現多物種時自動警告
 
-### 4. 多格式資料儲存
-- **Access Database** (.accdb) - 完整的關聯式資料庫（可在 config 中開關）
-- **SQLite** (.sqlite) - 跨平台輕量資料庫，無需安裝額外驅動（可在 config 中開關）
+### 4. 多格式資料儲存（可在 config 中開關）
+- **Access Database** (.accdb) - M$的單機版關聯式資料庫, 需要先準備好環境與空檔案才能寫入
+- **SQLite** (.sqlite) - 跨平台輕量資料庫, 無需安裝額外驅動, 可下sql query來查詢需要的結果
 - **Excel** (.xlsx) - 方便檢視和編輯
-- **CSV** (.csv) - 通用格式，易於匯入其他系統
+- **CSV** (.csv) - 通用格式, 易於匯入其他系統
 
 ## 硬體建議
 
 ### nvidia
-建議可用的顯卡 RTX 2060 / 3060 / 4060, VRAM各為 6 / 12 / 8 GB  
-VRAM愈大可開的batch愈高, 如果VRAM較低, 那麼嘗試在cfg把batch設小一點
+建議可用的顯卡 RTX 2060 / 3060 / 4060  
+如有庫存, RTX 3050 / 4050 也可以試看看  
+VRAM大概要4GB以上比較適合拿來跑 EasyOCR
 
 ### intel XPU
-[2026.2] 現在這個時間點應該還不支援使用torch的xpu版本用在easyocr  
+[2026.2] 現在這個時間點應該還不支援使用torch的xpu版本用在EasyOCR  
 因此使用cpu純跑也可, 速度會稍慢, 可能是GPU的5倍時間?
 
 ## 系統需求
-
-- Python 3.12 或更高版本
+- Python 3.10 或更高版本
 - Windows 10/11（Access DB 支援）
 - 4GB RAM 以上（建議 8GB）
 - 支援純 CPU 或 NVIDIA GPU 環境
@@ -67,14 +67,14 @@ python -m venv venv
 # Windows
 venv\Scripts\activate
 
-# 如果使用 PowerShell 出現權限問題，先執行：
+# 如果使用 PowerShell 出現權限問題, 先執行：
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
 4. **（NVIDIA GPU 使用者）先安裝 PyTorch GPU 版**
 
-> **重要**：如果你的電腦有 NVIDIA 顯示卡，**務必先安裝 GPU 版 PyTorch**，再安裝其他套件。
-> 否則 EasyOCR 會自動安裝 CPU 版 PyTorch，無法利用 GPU 加速。
+> **重要**：如果你的電腦有 NVIDIA 顯示卡, **務必先安裝 GPU 版 PyTorch**, 再安裝其他套件. 
+> 否則 EasyOCR 會自動安裝 CPU 版 PyTorch, 無法利用 GPU 加速. 
 
 ```bash
 # 確認你的 CUDA 版本（在 cmd 執行 nvidia-smi 查看右上角 CUDA Version）
@@ -89,7 +89,7 @@ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126
 | CUDA 12.1 | `pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121` |
 | CUDA 12.4 | `pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124` |
 | CUDA 12.6 | `pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126` |
-| 純 CPU | 不需要這一步，直接到下一步 |
+| 純 CPU | 不需要這一步, 直接到下一步 |
 
 [參考]  
 https://www.notion.so/PyTorch-30936ed5d3d680ceb0e1ed1dc8c2c7bf?source=copy_link
@@ -101,7 +101,7 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-> 純 CPU 環境直接執行此步驟即可，EasyOCR 會自動以 CPU 模式運行。
+> 純 CPU 環境直接執行此步驟即可, EasyOCR 會自動以 CPU 模式運行. 
 
 6. **安裝 ExifTool**
 
@@ -116,7 +116,7 @@ pip install pyexiftool
 
 7. **（可選）安裝 Tesseract OCR 作為備用引擎**
 
-Tesseract 是備用的 OCR 引擎，僅在 EasyOCR 無法使用時才需要。
+Tesseract 是備用的 OCR 引擎, 僅在 EasyOCR 無法使用時才需要. 
 
 ```bash
 pip install pytesseract
@@ -124,7 +124,7 @@ pip install pytesseract
 
 另外需安裝 Tesseract 執行檔：
 - Windows：從 [Tesseract GitHub](https://github.com/UB-Mannheim/tesseract/wiki) 下載安裝
-- 安裝後將路徑加入系統 PATH，或在程式中指定路徑
+- 安裝後將路徑加入系統 PATH, 或在程式中指定路徑
 
 ## 使用方式
 
@@ -190,7 +190,7 @@ D:\CameraTrap\
 
 ### 2. CSV 時間參考檔格式
 
-如果照片的 EXIF 時間不準確，可建立 CSV 檔案提供正確時間：
+如果照片的 EXIF 時間不準確, 可建立 CSV 檔案提供正確時間：
 
 **檔名**：與資料夾同名（如 `100RECNX.csv`）
 
@@ -204,7 +204,7 @@ IMG_0003.JPG,2024/01/15 09:15:10
 
 ### 3. Adobe Bridge 標籤設定
 
-使用 Adobe Bridge 標記照片時，請依照以下格式：
+使用 Adobe Bridge 標記照片時, 請依照以下格式：
 
 ```
 階層式關鍵字結構：
@@ -254,7 +254,7 @@ OI (Occurrence Index) = 有效照片數 / 相機工作時數 × 1000
 
 - **有效照片**：同一物種在設定時間間隔內只計算一次
 - **相機工作時數**：從第一張照片到最後一張照片的時間差（小時）
-- **OI 最大值限制**：當 `oi_max_one: true` 時，同一張照片即使包含多種動物，對 OI 的貢獻最多為 1；設為 `false` 則依照實際物種數計算
+- **OI 最大值限制**：當 `oi_max_one: true` 時, 同一張照片即使包含多種動物, 對 OI 的貢獻最多為 1；設為 `false` 則依照實際物種數計算
 
 ## 設定檔案
 
@@ -286,11 +286,11 @@ database:
   csv_file_name: "exif_data.csv"
 ```
 
-> Access DB 和 SQLite 檔案存放在專案的 `db/` 目錄；CSV 和 Excel 存放在設定的 output 目錄。
+> Access DB 和 SQLite 檔案存放在專案的 `db/` 目錄；CSV 和 Excel 存放在設定的 `output/` 目錄. 
 
 也可以從範本檔案開始：
 ```bash
-cp cfg/config.yaml.template cfg/config.yaml
+cp cfg/config.template.yaml cfg/config.yaml
 ```
 
 ### OCR 引擎選擇
@@ -316,7 +316,7 @@ cp cfg/config.yaml.template cfg/config.yaml
 **解決方法**：
 1. 下載並安裝 [Microsoft Access Database Engine 2016](https://www.microsoft.com/en-us/download/details.aspx?id=54920)
 2. 選擇與 Python 版本相符的位元版本（32/64 位元）
-3. 如已安裝 Office，確認版本相容性
+3. 如已安裝 Office, 確認版本相容性
 
 #### 2. EasyOCR 模型下載失敗
 **問題**：網路連接問題導致模型下載失敗
@@ -335,7 +335,7 @@ python -c "import easyocr; reader = easyocr.Reader(['en']); print('OK')"
 # 確認 PyTorch 是否偵測到 GPU
 python -c "import torch; print(f'CUDA: {torch.cuda.is_available()}, Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"N/A\"}')"
 
-# 如果顯示 CUDA: False，重新安裝 GPU 版 PyTorch
+# 如果顯示 CUDA: False, 重新安裝 GPU 版 PyTorch
 pip uninstall torch torchvision
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126
 ```
@@ -356,6 +356,7 @@ pip install PyQt6
 **解決方法**：
 - 準備 CSV 參考檔案提供準確時間
 - 調整照片品質或重新拍攝
+- tools/test_easyocr.py 有單純測試OCR的功能
 
 ### 效能優化建議
 
@@ -379,11 +380,10 @@ exif_agent/
 ├── cli.py                  # 命令列介面
 ├── requirements.txt        # Python 套件清單
 ├── README.md               # 專案說明文件
-├── CHANGELOG.md            # 更新記錄
 │
 ├── cfg/                    # 配置檔案資料夾
 │   ├── config.yaml         # 主配置檔（自動建立）
-│   └── config.yaml.template # 配置範本檔
+│   └── config.template.yaml # 配置範本檔
 │
 ├── src/                    # 原始碼目錄
 │   ├── processor.py        # 核心處理邏輯
@@ -406,8 +406,8 @@ exif_agent/
 │   ├── exif_data.sqlite    # SQLite 資料庫（自動建立）
 │   └── exif_data_替換用空檔案.accdb  # 空白 Access 模板
 │
-├── doc/                    # 文件資料夾
-│   └── exif2accessDB(EXIF轉換資料表).docx
+├── doc/                    # 文件資料夾, 主要為過去的文件
+│   └── exif2accessDB(EXIF轉換資料表)_2021.docx
 │
 ├── logs/                   # 日誌資料夾（自動建立）
 ├── output/                 # 輸出資料夾（自動建立）
@@ -415,25 +415,12 @@ exif_agent/
 
 ```
 
-### 核心模組說明
-
-| 模組 | 功能 | 關鍵類別/函數 |
-|-----|------|-------------|
-| `processor.py` | 照片處理核心 | `PhotoProcessor` |
-| `exif_reader.py` | EXIF 資訊提取 | `ExifReader._parse_hierarchical_subject()` |
-| `ocr_detector.py` | OCR 日期辨識 | `OCRDetector.detect_datetime_from_image()` |
-| `access_db.py` | Access DB 操作 | `AccessDB.insert_records_batch()` |
-| `sqlite_db.py` | SQLite 操作 | `SQLiteDB.insert_records_batch()` |
-| `csv_excel_writer.py` | CSV/Excel 輸出 | `CSVExcelWriter.write_to_excel()` |
-| `main_window.py` | PyQt6 介面 | `MainWindow`, `ProcessThread` |
-
 ### 相依套件
 
 主要套件：
 - **PyQt6** (>=6.6.0): GUI 框架
 - **EasyOCR**: OCR 文字辨識（預設引擎）
 - **Pillow** (>=10.0.0): 影像處理
-- **exifread** (>=3.0.0): EXIF 資訊讀取
 - **pandas** (>=2.1.0): 資料處理
 - **openpyxl** (>=3.1.0): Excel 檔案操作
 - **pyodbc** (>=5.0.0): Access DB 連接
@@ -460,7 +447,6 @@ exif_agent/
 - 使用此工具開啟專案 `db/` 目錄下的 `*.sqlite` 檔案即可瀏覽資料, 畫面如下
 ![img/sql_db_browser.png](img/sql_db_browser.png)
 
-
 #### 3. OCR 辨識
 - EasyOCR 首次執行需下載模型
 - 辨識準確度受照片品質影響
@@ -468,28 +454,28 @@ exif_agent/
 
 #### 4. GPU 加速
 - 僅支援 NVIDIA GPU（CUDA）
-- 需先安裝 GPU 版 PyTorch，再安裝其他套件
-- 純 CPU 環境也完全可用，只是 OCR 速度較慢
+- 需先安裝 GPU 版 PyTorch, 再安裝其他套件
+- 純 CPU 環境也完全可用, 只是 OCR 速度較慢
 
 #### 5. 標籤格式要求
 - 必須使用 Adobe Bridge 的 HierarchicalSubject 格式
-- Camera_ID 前綴必須為英文字母（如 JC38，不可 12JC）
-- 缺少 Species 標籤的照片會被跳過
-- 支援多物種標籤，自動產生多筆記錄
+- Camera_ID 前綴必須為英文字母（如 JC38, 不可 12JC）
+- 缺少 Species 標籤的照片會被跳過, 但log會有相關訊息
+- 支援多物種標籤, 自動產生多筆記錄
 
 ## 更新記錄
 
 ### v2.1.2 (2026-02-17)
-- 新增 `oi_max_one` 設定：同一照片多物種時，OI 貢獻最大值為 1 或依實際個數計算
-- 預設 `true`（限制最大值為 1），可在 `cfg/config.yaml` 中設為 `false` 改用實際個數
+- 新增 `oi_max_one` 設定：同一照片多物種時, OI 貢獻最大值為 1 或依實際個數計算
+- 預設 `true`（限制最大值為 1）, 可在 `cfg/config.yaml` 中設為 `false` 改用實際個數
 
 ### v2.1.1 (2026-02-17)
-- 新增 SQLite 資料庫輸出，跨平台免驅動
+- 新增 SQLite 資料庫輸出, 跨平台免驅動
 - Access DB 和 SQLite 統一存放於 `db/` 目錄
-- `cfg/config.yaml` 新增 `save_access_db` / `save_sqlite` 開關，可個別啟用或停用
+- `cfg/config.yaml` 新增 `save_access_db` / `save_sqlite` 開關, 可個別啟用或停用
 
 ### v2.1.0 (2026-02-16)
-- 移除 PaddleOCR，改用 EasyOCR 作為預設 OCR 引擎
+- 移除 PaddleOCR, 改用 EasyOCR 作為預設 OCR 引擎
 - 支援 NVIDIA GPU 加速（自動偵測）
 - 純 CPU 環境也可正常運行
 
@@ -513,12 +499,12 @@ logs/exif_agent_YYYYMMDD_HHMMSS.log
 2. 檢查 `cfg/config.yaml` 設定是否正確
 3. 確認照片的 EXIF 資訊和標籤格式
 4. 驗證 Access Database Engine 是否正確安裝
-5. 參考原始文件：`doc/exif2accessDB(EXIF轉換資料表).docx`
+5. 參考原始文件：`doc/exif2accessDB(EXIF轉換資料表)_2021.docx`
 
 ## 授權
 
 MIT
-本專案為野生動物研究專用工具，僅供內部使用。
+本專案為野生動物研究專用工具, 僅供內部使用. 
 
 ---
 
@@ -528,4 +514,4 @@ MIT
 過去的文件可參考  
 https://docs.google.com/document/d/1T9Ed9F1_3lZvY6rEwUN98xR7Bdo0RptoqBX9KmdtfJ8/edit?usp=sharing
 
-**特別感謝**：本專案基於原始 tkinter 版本重建，感謝所有研究人員的回饋與建議。
+**特別感謝**：本專案基於2021年的文件重建, 感謝所有研究人員的回饋與建議. 
