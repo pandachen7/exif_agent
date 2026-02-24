@@ -59,13 +59,13 @@ cd exif_agent
 
 2. **建立虛擬環境**
 ```bash
-python -m venv venv
+python -m venv .venv
 ```
 
 3. **啟動虛擬環境**
 ```bash
 # Windows
-venv\Scripts\activate
+.venv\Scripts\activate
 
 # 如果使用 PowerShell 出現權限問題, 先執行：
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
@@ -411,7 +411,7 @@ exif_agent/
 │
 ├── logs/                   # 日誌資料夾（自動建立）
 ├── output/                 # 輸出資料夾（自動建立）
-└── venv/                   # Python 虛擬環境
+└── .venv/                  # Python 虛擬環境
 
 ```
 
