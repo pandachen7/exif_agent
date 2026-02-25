@@ -108,12 +108,9 @@ pip install -e .
 
 使用 ExifTool 讀取更完整的 EXIF 資訊：
 
-1. 到 [ExifTool 官網](https://exiftool.org/) 下載對應平台的執行檔
-2. 將下載的執行檔放到專案根目錄（`exif_agent/`）下
-3. 必須安裝 Python 套件：
-```bash
-pip install pyexiftool
-```
+- 到 [ExifTool 官網](https://exiftool.org/) 下載對應平台的執行檔
+- 將下載的執行檔放到專案根目錄（`exif_agent/`）下
+- 必須安裝 Python 套件`pyexiftool` (已在 requirements.txt 中)
 
 7. **（可選）安裝 Tesseract OCR 作為備用引擎**
 
