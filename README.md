@@ -92,7 +92,8 @@ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126
 | 純 CPU | 不需要這一步, 直接到下一步 |
 
 [參考]  
-[Notion: 關於PyTorch安裝](https://www.notion.so/PyTorch-30936ed5d3d680ceb0e1ed1dc8c2c7bf?source=copy_link)
+<a href="https://www.notion.so/PyTorch-30936ed5d3d680ceb0e1ed1dc8c2c7bf?source=copy_link" target="_blank">Notion: 關於PyTorch安裝</a>
+
 
 5. **安裝相依套件**
 ```bash
